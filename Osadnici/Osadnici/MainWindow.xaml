@@ -1,0 +1,21 @@
+﻿<Window x:Class="Osadnici.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Osadnici"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Button HorizontalAlignment="Center" VerticalAlignment="Center" Margin="305.661,0,180.661,87.258" Background="{x:Null}" BorderBrush="{x:Null}">
+            <Button.ContentTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Polygon  Points="25,0 50,0 75,25 75,50 50,75 25,75 0,50 0,25"  Stroke="Red" StrokeThickness="3" Fill="LightBlue"></Polygon>
+                        <TextBlock Text="Test" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="36"></TextBlock>
+                    </Grid>
+                </DataTemplate>
+            </Button.ContentTemplate>
+        </Button>
+    </Grid>
+</Window>
