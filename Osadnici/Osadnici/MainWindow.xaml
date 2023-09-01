@@ -5,17 +5,30 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Osadnici"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Button HorizontalAlignment="Center" VerticalAlignment="Center" Margin="305.661,0,180.661,87.258" Background="{x:Null}" BorderBrush="{x:Null}">
-            <Button.ContentTemplate>
-                <DataTemplate>
-                    <Grid>
-                        <Polygon  Points="25,0 50,0 75,25 75,50 50,75 25,75 0,50 0,25"  Stroke="Red" StrokeThickness="3" Fill="LightBlue"></Polygon>
-                        <TextBlock Text="Test" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="36"></TextBlock>
-                    </Grid>
-                </DataTemplate>
-            </Button.ContentTemplate>
-        </Button>
+        Title="MainWindow" Height="600" Width="800" Background="Black">
+    <Grid x:Name="outerGrid">
+        <Grid x:Name="boardGrid">
+            <Grid.Resources>
+            <Style TargetType="{x:Type Button}">
+                    <Setter Property="BorderBrush" Value="Transparent"/>
+                    <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                                <Border Background="Transparent" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="3">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="BorderBrush" Value="Red"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            </Grid.Resources> 
+        </Grid>
     </Grid>
+
+
 </Window>

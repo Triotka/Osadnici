@@ -190,6 +190,7 @@ namespace Osadnici
         public List<Player> Players;
         public Dice Dice;
         public Board Board;
+        private int numOfPlayers = 4; //TODO
         private int currentPlayer;
         public Pirate Pirate;
         public bool IsWinner;
@@ -198,9 +199,10 @@ namespace Osadnici
         {
             throw new NotImplementedException();
         }
-        public void SwitchPlayers()
+        public Player SwitchPlayers()
         {
-            throw new NotImplementedException();
+            currentPlayer = (currentPlayer + 1) % numOfPlayers;
+            return Players[currentPlayer];
         }
 
         public void DealWithDice() //TODO
@@ -242,14 +244,21 @@ namespace Osadnici
 
             
             // TODO buy thing according to recipe
-            BuyAccordingRecipe();
+            BuyByRecipe();
             player.Activity = Activity.Building;
-            // TODO if placable place it
-            Pawn.
+            // TODO if there is space place it or you can withdraw;
+
             player.Activity = Activity.None;
             // check points and if enough then winner
             this.IsWinner = checkPointsAllPlayers();
+            return true;
         }
+
+        private void BuyByRecipe() //TODO
+        {
+            throw new NotImplementedException();
+        }
+
 
         private void giveCardsAfterDice()
         {
