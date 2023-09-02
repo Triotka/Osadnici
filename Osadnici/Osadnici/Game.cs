@@ -7,45 +7,114 @@ using System.Threading.Tasks;
 namespace Osadnici
 {
 
-    class Board
-    { // TODO
-       public Dictionary<int, List<Hexagon>> MappingNumbers;
-    }
-    enum Material
+    public enum Material
     {
         Brick,
         Wood,
         Wheat,
         Lamb,
-        Stone
+        Stone,
+        None
     }
 
-    enum Activity // TODO mozna nejake vypustit
+    public enum Activity // TODO mozna nejake vypustit
     {
-        None,
+        Rolling,
         GettingCards,
         MovingPirate,
         Buying,
         Building,
-        Selling
+        Selling,
+        None
     }
-    enum Color // TODO mozna nejake vypustit
+    public enum Color // TODO mozna nejake vypustit
     {
-        None,
         Yellow,
         White,
         Red,
         Blue
     }
 
-    enum PawnType
+    public enum PawnType
     {
+        None = -1,
         Road = 0,
         Village = 1,
         Town = 2
     }
 
-    class Building : Pawn
+
+    public class Board
+    {
+        public Dictionary<int, List<Hexagon>> MappingNumbers;
+        public List<Hexagon> Hexagons;
+        private int[] planNumbers = {4, 6, 9, 2, 5, 12, 4, 9, 8, 7, 8, 10, 3, 5, 10, 11, 3, 6, 11}; // start placement of board from rulebook for beginners
+        private Material[] planMaterial = { Material.Wheat, Material.Wood, Material.Wheat, Material.Brick, Material.Wood, Material.Lamb, Material.Lamb,
+                                            Material.Lamb, Material.Brick, Material.None, Material.Stone, Material.Lamb, Material.Wood, Material.Stone,
+                                            Material.Brick, Material.Wood, Material.Wheat, Material.Wheat, Material.Stone  };
+        int numberOfHexagons = 19;
+
+        public Board()
+        {
+            Hexagons = new List<Hexagon>();
+            MappingNumbers = new Dictionary<int, List<Hexagon>>();
+            CreateHexagons();
+        }
+
+        private bool checkStartPlacement()
+        {
+            return planNumbers.Length == numberOfHexagons && planMaterial.Length == numberOfHexagons;
+        }
+        private void CreateHexagons()
+        {
+            if (!checkStartPlacement())
+            {
+                throw new Exception();
+            }
+            for (int i = 0; i < numberOfHexagons; i++)
+            {
+                Hexagon hexagon = new Hexagon {Number =  planNumbers[i], Material = planMaterial[i], HasPirate = false, 
+                                               Buildings = new List<Building>(), Roads = new List<Road>()};
+                this.Hexagons.Add(hexagon);
+
+                //create mapping numbers on hexagons to hexagons
+                if (!MappingNumbers.ContainsKey(planNumbers[i]))
+                {
+                   var list = new List<Hexagon>();
+                   list.Add(hexagon);
+                   MappingNumbers.Add(planNumbers[i], list);
+                }
+                else
+                {
+                    MappingNumbers[planNumbers[i]].Add(hexagon);
+                }
+                
+            }
+        }
+
+    }
+
+
+    public class Town : Building
+    {
+        public Town(Color color) : base(color: color)
+        {
+            this.Type = PawnType.Town;
+            this.Number = 4;
+        }
+    }
+
+
+    public class Village : Building
+    {
+        public Village(Color color) : base(color:color)
+        {
+            this.Type = PawnType.Village;
+            this.Number = 5;
+        }
+    }
+
+    public class Building : Pawn
     {
         // cards gained according to type of building
         public int BuildingToCardsNum()
@@ -57,8 +126,11 @@ namespace Osadnici
                 return 2;
             throw new Exception();
         }
+        public Building(Color color) : base(color:color)
+        {
+        }
 
-        // přidá karty hrači, kterému patři budova, podle hodnoty budovy
+        // adds cards to player according of building value
         public void AddCardsToPlayer(Hexagon hexagon, List<Player> players)
         {
             var belongPlayer = this.MatchPlayer(players);
@@ -77,25 +149,37 @@ namespace Osadnici
         }
     }
 
-    class Road : Pawn
+    public class Road : Pawn
     {
-
+        public Road(Color color) : base(color: color)
+        {
+            this.Type = PawnType.Road;
+            this.Number = 15; //from rules
+        }
     }
-    class Hexagon
-    {
+   public class Hexagon
+   {
        
-        public string Number { get; set; }
+        public int Number { get; set; }
         public bool HasPirate { get; set; }
         public Material Material { get; set; }
         public List<Building> Buildings; //TODO zmenit typ
         public List<Road> Roads; //TODO zmenit typ
     }
 
-    class Pawn
+    public class Pawn
     {
         public PawnType Type { get; set; }
         public Color Color { get; set; }
+        public int Number { get; set; }
 
+
+        public Pawn(Color color)
+        {
+            this.Number = 0;
+            this.Color = color;
+            this.Type = PawnType.None; //default is None
+        }
         public Player MatchPlayer(List<Player> players)
         {
             throw new NotImplementedException();
@@ -105,7 +189,7 @@ namespace Osadnici
      // TODO použít někde generic method kdekoliv
 
     // lze zadat string i Card
-    class Recipe<T>
+   public class Recipe<T>
     {
         public List<T> Manual { get; set; }
         public string Name { get; set; }
@@ -133,15 +217,59 @@ namespace Osadnici
 
         }
     }
-    class Player
+    public class Player
     {
-        public string Name { get; set; }
-        public string Color { get; set; }
-        public int Points { get; set; }  //TODO nastavit na 0
+        public Color Color { get; set; }
+        public int Points { get; set; } 
         public Activity Activity { get; set; }
         public List<Pawn> Pawns;
         public List<Card> Cards;
+
+       public Player(Color color)
+        {
+            this.Points = 0;
+            this.Activity = Activity.Rolling;
+            this.Color = color;
+            this.Pawns = SetPawnsList();
+            this.Cards = SetCardsList();
+            
+        }
+
+        // inits list of pawns for player and returns it
+        private List<Card> SetCardsList()
+        {
+            var cardsList = new List<Card>();
+            foreach (Material material in Enum.GetValues(typeof(Material)))
+            {
+                if (material != Material.None)
+                cardsList.Add(new Card(material:material, number: 0));
+            }
+            return cardsList;
+        }
         
+        // inits list of pawns for player and returns it
+        private List<Pawn> SetPawnsList()
+        {
+            var pawnsList = new List<Pawn>();
+            pawnsList.Add(new Road(color: this.Color));
+            pawnsList.Add(new Village(color: this.Color)); 
+            pawnsList.Add(new Town(color: this.Color));
+
+            return pawnsList;
+        }
+        
+        // returns ordered pawns by enum PawnType
+        public List<Pawn> GetOrderedPawns()
+        {
+            return Pawns.OrderBy(x => x.Type).ToList();
+        }
+
+        // returns ordered cards by enum Material
+        public List<Card> GetOrderedCards()
+        {
+            return this.Cards.OrderBy(x => x.Material).ToList();
+        }
+
         public bool checkPoints()
         {
             return Points == 10;
@@ -172,7 +300,7 @@ namespace Osadnici
             return true;
         }
     }
-    class Card
+    public class Card
     {
         public Material Material { get; set; }
         public int Number { get; set; }
@@ -184,45 +312,88 @@ namespace Osadnici
         }
     }
      
-    class Game
+    public class Game
     {
-        const int pirateNumber = 7;
+        public int pirateNumber = 7;
         public List<Player> Players;
         public Dice Dice;
         public Board Board;
-        private int numOfPlayers = 4; //TODO
         private int currentPlayer;
         public Pirate Pirate;
         public bool IsWinner;
+        public int minimumPlayers = 2;
+        public  int maximumPlayers = 4;
 
-        public void PickNumPlayers()
+
+        public Game() // TODO init
         {
-            throw new NotImplementedException();
+            this.Board = new Board();
+            IsWinner = false;
+            Dice = new Dice();
+            Pirate = new Pirate();
+        }
+        public void SetPlayers(int numberOfPlayers)
+        {
+            Players = new List<Player>();
+            currentPlayer = 0;
+
+            var colors = Enum.GetValues(typeof(Color));
+            int playersAssigned = 0;
+            foreach (Color color in colors)
+            {
+                Players.Add(new Player(color));
+                playersAssigned++;
+                if (playersAssigned == numberOfPlayers)
+                    break;
+            }
+           
+            GetCurrentPlayer().Activity = Activity.Rolling; 
+        }
+
+
+        public Player GetCurrentPlayer()
+        {
+            return Players[currentPlayer];
         }
         public Player SwitchPlayers()
         {
-            currentPlayer = (currentPlayer + 1) % numOfPlayers;
-            return Players[currentPlayer];
+            currentPlayer = (currentPlayer + 1) % Players.Count;
+            var player = GetCurrentPlayer();
+            player.Activity = Activity.Rolling;
+            return player;
         }
 
-        public void DealWithDice() //TODO
+        // if timing is good roll dice and return true and message, if it is not possible return false and message
+        public (bool, string) HandleDiceRequest()
+        {
+            string message;
+            if (this.GetCurrentPlayer().Activity == Activity.Rolling)
+            {
+                ExecuteDice();
+                message = $"You rolled {Dice.Number}";
+                return (true, message);
+            }
+            message = "You cannot roll dice now";
+            return (false, message);
+        }
+        private void ExecuteDice() //TODO
         {
             Dice.Roll();
-            if (Dice.Number == pirateNumber)
-            {
-                Players[currentPlayer].Activity = Activity.MovingPirate;
-                // everybody lose cards if they are above limit
-                loseCardsAfterPirate(Players);
-                // TODO move pirate
-                //TODO kliknu na board a presune se na board s tim cislem a zmeni lokaci pirata Pirate.Location pozor ze musim presunout
-                Players[currentPlayer].Activity = Activity.None;
-            }
-            else
-            {
-                Players[currentPlayer].Activity = Activity.GettingCards;
-                giveCardsAfterDice();
-                Players[currentPlayer].Activity = Activity.None;
-            }
+            //if (Dice.Number == pirateNumber)
+            //{
+            //    GetCurrentPlayer().Activity = Activity.MovingPirate;
+            //    // everybody lose cards if they are above limit
+            //    loseCardsAfterPirate(Players);
+            //    // TODO move pirate
+            //    //TODO kliknu na board a presune se na board s tim cislem a zmeni lokaci pirata Pirate.Location pozor ze musim presunout
+            //    GetCurrentPlayer().Activity = Activity.None;
+            //}
+            //else
+            //{
+            //    GetCurrentPlayer().Activity = Activity.GettingCards;
+            //    giveCardsAfterDice();
+            //    GetCurrentPlayer().Activity = Activity.None;
+            //}
            
             
         }
@@ -321,12 +492,12 @@ namespace Osadnici
         }
     }
 
-    class Pirate
+    public class Pirate
     {
         public Hexagon Location { get; set; }
     }
 
-    class Dice
+    public class Dice
     {
         public int Number { get; set; }
 
