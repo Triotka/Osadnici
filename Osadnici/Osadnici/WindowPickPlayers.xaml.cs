@@ -24,37 +24,6 @@ namespace Osadnici
     public partial class WindowPickPlayers : Window
     {
         Game game;
-
-        // creates button to exit the window
-       private void CreateExitButton(int size)
-        {
-            Button exitButton = new Button();
-            exitButton.HorizontalAlignment = HorizontalAlignment.Right;
-            exitButton.VerticalAlignment = VerticalAlignment.Top;
-            exitButton.Width = size;
-            exitButton.Height = size;
-            exitButton.Background = Brushes.Red;
-            exitButton.Content = "X";
-            exitButton.FontSize = size * 0.75;
-            exitButton.Foreground = Brushes.White;
-            exitButton.AddHandler(Button.ClickEvent, new RoutedEventHandler(ExitButton_Click));
-            outerGrid.Children.Add(exitButton);
-        }
-
-        // creates label which tells user to pick number of players
-        private void CreatePickLabel(int size)
-        {
-            Label pickLabel = new Label();
-            pickLabel.Background = Brushes.Transparent;
-            pickLabel.Foreground = Brushes.White;
-            pickLabel.Content = "Pick Number of Players";
-            pickLabel.Width = size * 6;
-            pickLabel.Height = size;
-            pickLabel.FontSize = size / 2;
-            pickLabel.VerticalAlignment = VerticalAlignment.Top;
-            pickLabel.HorizontalAlignment = HorizontalAlignment.Center;
-            outerGrid.Children.Add(pickLabel);
-        }
         // creates Buttons to pick number of players
         private void CreatePickButtons(int size)
         {
@@ -95,7 +64,7 @@ namespace Osadnici
             var btnPressed = (Button)sender;
             var numOfPlayers = Char.GetNumericValue(btnPressed.Name[btnPressed.Name.Length - 1]);
             game.SetPlayers((int)numOfPlayers);
-            MainWindow mainWindow = new MainWindow(game);
+            MainWindow mainWindow = new MainWindow(game, $"Players were set to {game.Players.Count}");
             mainWindow.Show();
             this.Close();
         }
@@ -103,12 +72,12 @@ namespace Osadnici
         public WindowPickPlayers() // TODO velikost na velikosti okna
         {
             game = new Game();
-            WindowState = WindowState.Maximized;
-            WindowStyle = WindowStyle.None;
+            GenericWindow.SetWindowStyle(window: this);
             InitializeComponent();
-            CreateExitButton(60);
+            GenericWindow.CreateExitButton(handler: new RoutedEventHandler(ExitButton_Click), size: 60, outerGrid: outerGrid);
             CreatePickButtons(150);
-            CreatePickLabel(80);
+            GenericWindow.CreateAnnoucmentLabel(width: 350, height: 60, outerGrid: outerGrid,
+                                   initMessage: "Pick Number of Players");
 
         }
     }

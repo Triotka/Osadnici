@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Osadnici"
         mc:Ignorable="d"
-        Title="Osadnici" Height="600" Width="800" Background="Black">
+        Title="Osadnici" Height="600" Width="800">
     <Grid x:Name="outerGrid">
         <Grid x:Name="boardGrid">
             <Grid.Resources>
