@@ -494,9 +494,42 @@ namespace Osadnici
         Label playerLabel;
         Label annoucmentLabel;
 
+        // maps activity to displayed string
+        private string DisplayActivity(Activity activity)
+        {
+            if (activity == Activity.StartFirstVillage)
+                return "Building first village";
+            if (activity == Activity.StartSecondVillage)
+                return "Building second village";
+            if (activity == Activity.StartFirstRoad)
+                return "Building first road";
+            if (activity == Activity.StartSecondRoad)
+                return "Building second road";
+            if (activity == Activity.Rolling)
+                return "Must roll a dice";
+            if (activity == Activity.BuildingVillage)
+                return "Building a village";
+            if (activity == Activity.BuildingRoad)
+                return "Building a road";
+            if (activity == Activity.BuildingTown)
+                return "Building a town";
+            if (activity == Activity.MovingPirate)
+                return "Must move a pirate";
+            if (activity == Activity.NoPossibilities)
+                return "No more action";
+            if (activity == Activity.None)
+                return "Waiting for action";
+            throw new Exception(); //unknown action
+        }
 
-        // create label with players color and points
-        private Label CreatePlayerLabel(int size, int margin)
+        // updates player's label info
+        private void UpdatePlayerLabel()
+        {
+            var player = gameLogic.GetCurrentPlayer();
+            this.playerLabel.Content = $"Player: {player.Color}\nPoints: {player.Points}\nActivity: {DisplayActivity(player.Activity)}";
+        }
+        // creates label with players color, points and activity
+        private void CreatePlayerLabel(int size, int margin)
         {
 
             Label label = new Label();
@@ -507,10 +540,12 @@ namespace Osadnici
             label.HorizontalAlignment = HorizontalAlignment.Left;
             label.VerticalAlignment = VerticalAlignment.Center;
             label.FontSize = margin / 3;
-            Player player = gameLogic.GetCurrentPlayer();
-            label.Content = $"Player: {player.Color.ToString()}\nPoints: {player.Points}\nActivity: {player.Activity}";
+            //Player player = gameLogic.GetCurrentPlayer();
+            //label.Content = $"Player: {player.Color.ToString()}\nPoints: {player.Points}\nActivity: {player.Activity}";
+           
             outerGrid.Children.Add(label);
-            return label;
+            this.playerLabel = label;
+            UpdatePlayerLabel();
         }
 
         
@@ -567,6 +602,7 @@ namespace Osadnici
                         {
                             gameLogic.GetCurrentPlayer().Activity = Activity.BuildingVillage;
                             annoucmentLabel.Content = successfulMessage + " " + nameof(PawnType.Village);
+                            UpdatePlayerLabel();
                             return;
 
                         }
@@ -583,6 +619,7 @@ namespace Osadnici
                         {
                             gameLogic.GetCurrentPlayer().Activity = Activity.BuildingTown;
                             annoucmentLabel.Content = successfulMessage + " " + nameof(PawnType.Town);
+                            UpdatePlayerLabel();
                             return;
                         }
                     }
@@ -599,6 +636,7 @@ namespace Osadnici
                         {
                             gameLogic.GetCurrentPlayer().Activity = Activity.BuildingRoad;
                             annoucmentLabel.Content = successfulMessage + " " + nameof(PawnType.Road);
+                            UpdatePlayerLabel();
                             return;
                         }
                             
@@ -662,7 +700,7 @@ namespace Osadnici
             if (currentPlayer.Activity == Activity.None || currentPlayer.Activity == Activity.NoPossibilities)
             {
                 Player player = gameLogic.SwitchPlayers();
-                playerLabel.Content = $"Player: {player.Color}\nPoints: {player.Points}\nActivity: {player.Activity}";
+                UpdatePlayerLabel();
 
                 var mainWindow = new MainWindow(game: this.gameLogic, "Switched players");
                 mainWindow.Show();
@@ -695,7 +733,7 @@ namespace Osadnici
                                             switchButtonHandler: new RoutedEventHandler(SwitchButton_Click), diceButtonHandler: DiceButton_Click);
             this.annoucmentLabel = GenericWindow.CreateAnnoucmentLabel(width: (int)height, height: (int)height / 12, outerGrid: outerGrid,
                                    initMessage: initMessage);
-            this.playerLabel = CreatePlayerLabel(size: (int)height / 2, margin: (int)height / 12);
+            CreatePlayerLabel(size: (int)height / 2, margin: (int)height / 12);
             new Pawns(game, (int)height / 18, outerGrid, hexagons).CreatePawns((int)height / 36);
            
         }

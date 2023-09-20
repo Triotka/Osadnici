@@ -755,7 +755,7 @@ namespace Osadnici
             foreach (Material material in Enum.GetValues(typeof(Material)))
             {
                 if (material != Material.None)
-                cardsList.Add(new Card(material:material, number: 20)); // begin with one card from each material
+                cardsList.Add(new Card(material:material, number: 1)); // begin with one card from each material
             }
             return cardsList;
         }
