@@ -98,6 +98,8 @@ namespace Osadnici
     }
     class GenericWindow : Window
     {
+        
+        // creates exit button 
         static public void CreateExitButton(RoutedEventHandler handler, int size, Grid outerGrid)
         {
             Button exitButton = new Button();
@@ -163,6 +165,24 @@ namespace Osadnici
             polygon.Margin = margin;
             outerGrid.Children.Add(polygon);
             return polygon;
+        }
+
+       // creates action button to place into a stack panel
+        public static Button CreateActionButton(int size, string content, StackPanel stackPanel, RoutedEventHandler handler)
+        {
+            Button actionButton = new Button();
+            actionButton.HorizontalAlignment = HorizontalAlignment.Left;
+            actionButton.VerticalAlignment = VerticalAlignment.Top;
+            actionButton.Width = size * 2.5;
+            actionButton.Height = size;
+            actionButton.Background = ColorMaker.CreateButtonPaint();
+            actionButton.Foreground = Brushes.White;
+            actionButton.FontSize = size * 0.35;
+            actionButton.Margin = new Thickness(size / 4, 0, size / 4, 0);
+            actionButton.Content = content;
+            actionButton.AddHandler(Button.ClickEvent, handler);
+            stackPanel.Children.Add(actionButton);
+            return actionButton;
         }
         public static Ellipse CreateCircle(Brush color, Thickness margin, int size, Grid outerGrid)
         {

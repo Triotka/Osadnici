@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Diagnostics;
 
 namespace Osadnici
 {
@@ -69,14 +70,18 @@ namespace Osadnici
             this.Close();
         }
 
-        public WindowPickPlayers() // TODO velikost na velikosti okna
+        public WindowPickPlayers()
         {
             game = new Game();
             GenericWindow.SetWindowStyle(window: this);
             InitializeComponent();
-            GenericWindow.CreateExitButton(handler: new RoutedEventHandler(ExitButton_Click), size: 60, outerGrid: outerGrid);
-            CreatePickButtons(150);
-            GenericWindow.CreateAnnoucmentLabel(width: 350, height: 60, outerGrid: outerGrid,
+            var height = SystemParameters.PrimaryScreenHeight;
+            var width = SystemParameters.PrimaryScreenWidth;
+          
+
+            GenericWindow.CreateExitButton(handler: new RoutedEventHandler(ExitButton_Click), size: (int)(height / 12), outerGrid: outerGrid);
+            CreatePickButtons((int)height/5);
+            GenericWindow.CreateAnnoucmentLabel(width: (int) height, height: (int)height/12, outerGrid: outerGrid,
                                    initMessage: "Pick Number of Players");
 
         }

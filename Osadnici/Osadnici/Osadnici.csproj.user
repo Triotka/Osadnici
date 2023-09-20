@@ -13,6 +13,9 @@
     <Compile Update="WindowPickPlayers.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="WinnerWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="MainWindow.xaml">
@@ -22,6 +25,9 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="WindowPickPlayers.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="WinnerWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

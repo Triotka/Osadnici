@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Diagnostics;
 
+
 namespace Osadnici
 {
     /// <summary>
@@ -40,28 +41,13 @@ namespace Osadnici
         public static void CreateActionButtons(int size, Grid outerGrid, RoutedEventHandler switchButtonHandler, RoutedEventHandler diceButtonHandler)
         {
             StackPanel actionStackPanel = new StackPanel();
-            var switchButton = CreateActionButton(size: size, content: "Next player", stackPanel: actionStackPanel, handler: switchButtonHandler);
-            var diceButton = CreateActionButton(size: size, content: "Roll dice", stackPanel: actionStackPanel, handler: new RoutedEventHandler(diceButtonHandler));
+            var switchButton = GenericWindow.CreateActionButton(size: size, content: "Next player", stackPanel: actionStackPanel, handler: switchButtonHandler);
+            var diceButton = GenericWindow.CreateActionButton(size: size, content: "Roll dice", stackPanel: actionStackPanel, handler: new RoutedEventHandler(diceButtonHandler));
             outerGrid.Children.Add(actionStackPanel);
         }
 
-        // creates action button look
-        private static Button CreateActionButton(int size, string content, StackPanel stackPanel, RoutedEventHandler handler)
-        {
-            Button actionButton = new Button();
-            actionButton.HorizontalAlignment = HorizontalAlignment.Left;
-            actionButton.VerticalAlignment = VerticalAlignment.Top;
-            actionButton.Width = size * 2;
-            actionButton.Height = size;
-            actionButton.Background = ColorMaker.CreateButtonPaint();
-            actionButton.Foreground = Brushes.White;
-            actionButton.FontSize = size * 0.35;
-            actionButton.Margin = new Thickness(size / 4, 0, size / 4, 0);
-            actionButton.Content = content;
-            actionButton.AddHandler(Button.ClickEvent, handler);
-            stackPanel.Children.Add(actionButton);
-            return actionButton;
-        }
+       
+       
     }
 
     class CardsSet
@@ -74,7 +60,7 @@ namespace Osadnici
             this.outerGrid = grid;
         }
         // creates cards with material
-        public void CreateMaterialCards(int size, RoutedEventHandler handler) // TODO přidat Label
+        public void CreateMaterialCards(int size, RoutedEventHandler handler)
         {
             StackPanel outerStackPanel = new StackPanel();
             outerStackPanel.Background = ColorMaker.CreateCardBackground();
@@ -125,7 +111,7 @@ namespace Osadnici
         }
 
         // creates buttons in shape of card with things I can build/buy
-        private StackPanel CreateBuildButtons(int size, RoutedEventHandler handler) //TODO barva
+        private StackPanel CreateBuildButtons(int size, RoutedEventHandler handler)
         {
             StackPanel buttonStackPanel = new StackPanel();
             buttonStackPanel.Orientation = Orientation.Horizontal;
@@ -188,7 +174,6 @@ namespace Osadnici
         public Pawns(Game game, int sizeOfHexagon, Grid grid, List<Polygon> drawnHexagons)
         {
             gameLogic = game;
-            
             this.sizeOfHexagon = sizeOfHexagon;
             this.hexagons = gameLogic.Board.Hexagons;
             outerGrid = grid;
@@ -196,13 +181,32 @@ namespace Osadnici
         }
         public void CreatePawns(int pawnSize)
         {
-
+            CreatePirate(pawnSize: pawnSize, drawnHexagons[gameLogic.Pirate.Location]);
             for (int i = 0; i < hexagons.Count; i++)
             {
                 CreateBuildings(pawnSize: pawnSize, hexagonIndex: i, drawnHexagons[i]);
                 CreateRoads(pawnSize: pawnSize, hexagonIndex: i, drawnHexagons[i]);
             }
 
+        }
+        private void CreatePirate(int pawnSize, Polygon drawnHexagon)
+        {
+            
+            var point = GetPiratePoint(drawnHexagon);
+            var margin = new Thickness(point.X + drawnHexagon.Margin.Left, point.Y + drawnHexagon.Margin.Top, drawnHexagon.Margin.Right + 2 * sizeOfHexagon, drawnHexagon.Margin.Bottom + 2 * sizeOfHexagon);
+            GenericWindow.CreateSquare(Brushes.Black, margin, pawnSize, this.outerGrid);
+
+        }
+
+        // get positin on drawn hexagon to place pirate, in the middle
+        private Point GetPiratePoint(Polygon drawnHexagon)
+        {
+            Point piratePoint = new Point();
+            var hexagonPoints = GenericWindow.GetHexagonPoints(sizeOfHexagon, drawnHexagon);
+            piratePoint.X = hexagonPoints[5].X  + Math.Abs(hexagonPoints[5].X - hexagonPoints[1].X) / 2;
+            piratePoint.Y = hexagonPoints[0].Y + Math.Abs(hexagonPoints[3].Y- hexagonPoints[0].Y) /2;
+
+            return piratePoint;
         }
         // creates buildings for one hexagon
         private void CreateBuildings(int pawnSize, int hexagonIndex, Polygon drawnHexagon)
@@ -399,7 +403,7 @@ namespace Osadnici
             boardButton.Foreground = Brushes.Black;
             boardButton.FontSize = size;
 
-            if (number != gameLogic.pirateNumber)
+            if (number != gameLogic.PirateNumber)
             {
                 boardButton.Content = $"{number}";
             }
@@ -504,25 +508,13 @@ namespace Osadnici
             label.VerticalAlignment = VerticalAlignment.Center;
             label.FontSize = margin / 3;
             Player player = gameLogic.GetCurrentPlayer();
-            label.Content = $"Player: {player.Color.ToString()}\nPoints: {player.Points}";
+            label.Content = $"Player: {player.Color.ToString()}\nPoints: {player.Points}\nActivity: {player.Activity}";
             outerGrid.Children.Add(label);
             return label;
         }
 
-        private void DisplayDiceMessage(bool isRolled, string message)
-        {
-            if (isRolled)
-            {
-                this.annoucmentLabel.Content = message;
-                
-            }
-            else
-            {
-                this.annoucmentLabel.Content = message;
-            }
-        }
-
-        void BoardButton_Click(object sender, RoutedEventArgs e) // TODO zde zacni
+        
+        void BoardButton_Click(object sender, RoutedEventArgs e) 
         {
             Button clickedButton = (Button)sender;
             int clickedIndex = GenericWindow.FindObjectIndex(clickedButton);
@@ -533,49 +525,179 @@ namespace Osadnici
             hexagonWindow.Show();
             this.Close();
         }
-        void DiceButton_Click(object sender, RoutedEventArgs e) // TODO
+        void DiceButton_Click(object sender, RoutedEventArgs e)
         {
             (var isRolled, var message) = gameLogic.HandleDiceRequest();
-            DisplayDiceMessage(isRolled, message);
+            var mainWindow = new MainWindow(game: this.gameLogic, message);
+            mainWindow.Show();
+            this.Close();
+            
 
 
         }
-        void BuildButton_Click(object sender, RoutedEventArgs e) // TODO
+        void BuildButton_Click(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            string unsuccessfulMessage = "Unable to buy";
+            string successfulMessage = "Bought";
+            if (gameLogic.GetCurrentPlayer().Activity != Activity.None)
+            {
+                annoucmentLabel.Content = unsuccessfulMessage;
+                return;
+            }
+            Button clickedButton = (Button)sender;
+          
+            string[] names = Enum.GetNames(typeof(PawnType));
+            
+            
+            for (int i = 0; i < names.Length; i++)
+            {
+                if (clickedButton.Name.EndsWith(names[i]))
+                {
+                    
+                    bool successfulBuy = false;
+                    if (names[i] == PawnType.Village.ToString())
+                    {
+                        successfulBuy = gameLogic.GetCurrentPlayer().Buy(gameLogic.RecipeRules[PawnType.Village]);
+                        if (!successfulBuy)
+                        {
+                            annoucmentLabel.Content = unsuccessfulMessage + " " + nameof(PawnType.Village);
+                            return;
+                        }
+                        else
+                        {
+                            gameLogic.GetCurrentPlayer().Activity = Activity.BuildingVillage;
+                            annoucmentLabel.Content = successfulMessage + " " + nameof(PawnType.Village);
+                            return;
+
+                        }
+                    }
+                    if (names[i] == nameof(PawnType.Town))
+                    {
+                        successfulBuy = gameLogic.GetCurrentPlayer().Buy( gameLogic.RecipeRules[PawnType.Town]);
+                        if (!successfulBuy)
+                        {
+                            annoucmentLabel.Content = unsuccessfulMessage + " " + nameof(PawnType.Town);
+                            return;
+                        }
+                        else
+                        {
+                            gameLogic.GetCurrentPlayer().Activity = Activity.BuildingTown;
+                            annoucmentLabel.Content = successfulMessage + " " + nameof(PawnType.Town);
+                            return;
+                        }
+                    }
+                    if (names[i] == nameof(PawnType.Road))
+                    {
+                        successfulBuy = gameLogic.GetCurrentPlayer().Buy(gameLogic.RecipeRules[PawnType.Road]);
+
+                        if (!successfulBuy)
+                        {
+                            annoucmentLabel.Content = unsuccessfulMessage + " " + nameof(PawnType.Road);
+                            return;
+                        }
+                        else
+                        {
+                            gameLogic.GetCurrentPlayer().Activity = Activity.BuildingRoad;
+                            annoucmentLabel.Content = successfulMessage + " " + nameof(PawnType.Road);
+                            return;
+                        }
+                            
+                    }
+
+                }
+            }
+           
         }
 
-        void MaterialButton_Click(object sender, RoutedEventArgs e) // TODO
+        void MaterialButton_Click(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            if (gameLogic.GetCurrentPlayer().Activity != Activity.None)
+            {
+                annoucmentLabel.Content = "Cannot sell";
+                return;
+            }
+
+            Button clickedButton = (Button)sender;
+            foreach (var material in Enum.GetValues(typeof(Material)).Cast<Material>())
+            {
+                if (clickedButton.Name.EndsWith(material.ToString()))
+                {
+                    Trace.WriteLine(material);
+                    bool succesfulSell = gameLogic.GetCurrentPlayer().Sell(material, gameLogic);
+                    if (succesfulSell)
+                    {
+                        var winner = gameLogic.CheckWinner();
+                        if (winner != null)
+                        {
+                            var winnerWindow = new WinnerWindow(winner);
+                            winnerWindow.Show();
+                            this.Close();
+                        }
+                        else
+                        {
+                            var mainWindow = new MainWindow(game: this.gameLogic, "Succesful sell");
+                            mainWindow.Show();
+                            this.Close();
+                        }
+                       
+                    }
+                    else
+                    {
+                        annoucmentLabel.Content = "You cannot sell this";
+                    }
+                    break;
+                }
+
+               
+            }
+
+
+
+
         }
-        void SwitchButton_Click(object sender, RoutedEventArgs e) // TODO
+        void SwitchButton_Click(object sender, RoutedEventArgs e) 
         {
-            Player player = gameLogic.SwitchPlayers();
-            playerLabel.Content = $"Player: {player.Color}\nPoints: {player.Points}";
+
+            var currentPlayer = gameLogic.GetCurrentPlayer();
+            if (currentPlayer.Activity == Activity.None || currentPlayer.Activity == Activity.NoPossibilities)
+            {
+                Player player = gameLogic.SwitchPlayers();
+                playerLabel.Content = $"Player: {player.Color}\nPoints: {player.Points}\nActivity: {player.Activity}";
+
+                var mainWindow = new MainWindow(game: this.gameLogic, "Switched players");
+                mainWindow.Show();
+                this.Close();
+            }
+            else
+            {
+                annoucmentLabel.Content = "You cannot switch players";
+            }
+
         }
         void ExitButton_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
-        public MainWindow(Game game, string initMessage) // TODO upravit velikosti objektů v zavislosti na poli
+        public MainWindow(Game game, string initMessage)
         {
 
             this.gameLogic = game;
             GenericWindow.SetWindowStyle(window: this);
             InitializeComponent();
-            GenericWindow.CreateExitButton(handler: new RoutedEventHandler(ExitButton_Click), size: 60, outerGrid: outerGrid);
-            this.hexagons = new DrawnBoard(game: game, boardGrid: boardGrid, handler: new RoutedEventHandler(BoardButton_Click)).CreateBoard(size: 40, start: new Start(0, 100));
-            new CardsSet(game: game, grid: outerGrid).CreateBuildCards(size: 90, handler: new RoutedEventHandler(BuildButton_Click));
-            new CardsSet(game: game, grid: outerGrid).CreateMaterialCards(size: 90, handler: new RoutedEventHandler(MaterialButton_Click));
-            ActionField.CreateActionButtons(size: 60, outerGrid: outerGrid,
+            var height = SystemParameters.PrimaryScreenHeight;
+            var width = SystemParameters.PrimaryScreenWidth;
+
+            GenericWindow.CreateExitButton(handler: new RoutedEventHandler(ExitButton_Click), size: (int)height / 12, outerGrid: outerGrid);
+            this.hexagons = new DrawnBoard(game: game, boardGrid: boardGrid, handler: new RoutedEventHandler(BoardButton_Click)).CreateBoard(size: (int)height / 18, start: new Start(0, (int)(height / 7.2)));
+            new CardsSet(game: game, grid: outerGrid).CreateBuildCards(size: (int)height / 8, handler: new RoutedEventHandler(BuildButton_Click));
+            new CardsSet(game: game, grid: outerGrid).CreateMaterialCards(size: (int)height / 8, handler: new RoutedEventHandler(MaterialButton_Click));
+            ActionField.CreateActionButtons(size: (int)height/12, outerGrid: outerGrid,
                                             switchButtonHandler: new RoutedEventHandler(SwitchButton_Click), diceButtonHandler: DiceButton_Click);
-            this.annoucmentLabel = GenericWindow.CreateAnnoucmentLabel(width: 300, height: 60, outerGrid: outerGrid,
+            this.annoucmentLabel = GenericWindow.CreateAnnoucmentLabel(width: (int)height, height: (int)height / 12, outerGrid: outerGrid,
                                    initMessage: initMessage);
-            this.playerLabel = CreatePlayerLabel(size: 300, margin: 60);
-            new Pawns(game, 40, outerGrid, hexagons).CreatePawns(20);
-            annoucmentLabel.Background = hexagons[9].Fill;
-            annoucmentLabel.Content = $"{game.Board.Hexagons[9].Number}";
+            this.playerLabel = CreatePlayerLabel(size: (int)height / 2, margin: (int)height / 12);
+            new Pawns(game, (int)height / 18, outerGrid, hexagons).CreatePawns((int)height / 36);
+           
         }
     }
 }

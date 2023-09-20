@@ -8,7 +8,7 @@ using System.Diagnostics;
 namespace Osadnici
 {
 
-    public enum Material
+    public enum Material // card material
     {
         Brick,
         Wood,
@@ -18,24 +18,21 @@ namespace Osadnici
         None
     }
 
-    public enum Activity // TODO mozna nejake vypustit
+    public enum Activity // some important actions during the game
     {
         StartFirstVillage,
         StartSecondVillage,
         StartFirstRoad,
         StartSecondRoad,
-        GettingFirstCards,
-        Buying,
         Rolling,
-        GettingCards,
         MovingPirate,
         BuildingVillage,
         BuildingTown,
         BuildingRoad,
-        Selling,
+        NoPossibilities,
         None
     }
-    public enum Color // TODO mozna nejake vypustit
+    public enum Color // colors of the players
     {
         Yellow,
         White,
@@ -76,6 +73,7 @@ namespace Osadnici
         {
             var buildPlace = clickedHexagon.Roads[clickedIndex-6];
             var player = game.GetCurrentPlayer();
+
             if (player.Activity != Activity.BuildingRoad && player.Activity != Activity.StartFirstRoad
                 && player.Activity != Activity.StartSecondRoad) // you are not building a road
                 return false;
@@ -83,6 +81,10 @@ namespace Osadnici
                 return false;
             if (!(clickedHexagon.CheckRoadConnedtivity(clickedIndex, game)))
                 return false;
+            if (!player.IsEnoughPawns(PawnType.Road))
+            {
+                return false;
+            }
 
             
             var road = new Road(color: player.Color);
@@ -93,11 +95,13 @@ namespace Osadnici
                 if (neighbour != null && neighbour.Item1 != null)
                     neighbour.Item1.Roads[neighbour.Item2 - 6] = road;
             }
+
+            player.RemovePawn(PawnType.Road);
             return true;
         }
 
 
-        public bool BuildBuilding(Hexagon clickedHexagon, int clickedIndex, Game game) // TODO zkontrolovat
+        public bool BuildBuilding(Hexagon clickedHexagon, int clickedIndex, Game game) 
         {
             var buildPlace = clickedHexagon.Buildings[clickedIndex];
             var player = game.GetCurrentPlayer();
@@ -112,10 +116,14 @@ namespace Osadnici
 
             if (buildPlace.Color != Color.None && buildPlace.Type == PawnType.Town) // there is already your town you cannot uprgrade
                 return false;
-            if (player.Activity == Activity.BuildingVillage && !(clickedHexagon.CheckBuildingToRoadConnectivity(clickedIndex, game))) //TODO checkRoadConnectivity but only if start is true
+            if (player.Activity == Activity.BuildingVillage && !(clickedHexagon.CheckBuildingToRoadConnectivity(clickedIndex, game)))
                 return false;
-
-
+            if (player.Activity == Activity.BuildingTown && !player.IsEnoughPawns(PawnType.Town))
+                return false;
+            if (player.Activity == Activity.BuildingVillage && !player.IsEnoughPawns(PawnType.Village))
+                return false;
+            if (player.Activity == Activity.BuildingTown && buildPlace.Color != player.Color)
+               return false;
             var buildingSharedPlaces = clickedHexagon.GetSharedBuildingPlaces(clickedIndex); // list of pairs neighbour and index
 
             if (player.Activity == Activity.BuildingVillage || player.Activity == Activity.StartFirstVillage || player.Activity == Activity.StartSecondVillage) // build village
@@ -127,6 +135,8 @@ namespace Osadnici
                     if (neighbour != null && neighbour.Item1 != null)
                     neighbour.Item1.Buildings[neighbour.Item2] = village;
                 }
+
+                player.RemovePawn(PawnType.Village);
             }
             else // build town
             {
@@ -137,19 +147,19 @@ namespace Osadnici
                     if (neighbour != null && neighbour.Item1 != null)
                     neighbour.Item1.Buildings[neighbour.Item2] = town;
                 }
+                player.RemovePawn(PawnType.Town);
+                player.AddPawn(PawnType.Village); // you got village back after building a town
             }
-          
 
+            player.Points++;
             return true;
         }
         
 
-       
         private bool checkStartPlacement()
         {
             return planNumbers.Length == numberOfHexagons && planMaterial.Length == numberOfHexagons;
         }
-
 
         private void AssignNeighbours()
         {
@@ -253,7 +263,7 @@ namespace Osadnici
         public Village(Color color) : base(color:color)
         {
             this.Type = PawnType.Village;
-            this.Number = 5;
+            this.Number = 5; // from rules
         }
     }
 
@@ -262,13 +272,14 @@ namespace Osadnici
         // cards gained according to type of building
         public int BuildingToCardsNum()
         {
-            throw new NotImplementedException();
             if (this.Type == PawnType.Village)
                 return 1;
             if (this.Type == PawnType.Town)
                 return 2;
             throw new Exception();
         }
+
+        
         public Building(Color color) : base(color:color)
         {
         }
@@ -282,14 +293,18 @@ namespace Osadnici
             int cardsGained = this.BuildingToCardsNum();
             Material material = hexagon.Material;
 
-            //LINQ? TODO zkontrolovat jestli funguje
+            //LINQ
             var cardInHand = from card in belongPlayer.Cards where card.Material == material select card;
             if (cardInHand.Count() == 1)
             {
-                foreach (var card in cardInHand) // bude to fungovat nebo to musi byt propojene s player
+                foreach (var card in cardInHand)
                     card.Number = card.Number + cardsGained;
             }
-            throw new Exception();
+            else
+            {
+                throw new Exception(); // card with material does not exist
+            }
+            
 
         }
     }
@@ -317,22 +332,13 @@ namespace Osadnici
    {
        
         public int Number { get; set; }
-        public bool HasPirate { get; set; }
         public Material Material { get; set; }
-        public List<Building> Buildings; //TODO zmenit typ
-        public List<Road> Roads; //TODO zmenit typ
+        public List<Building> Buildings; 
+        public List<Road> Roads; 
         public Neighbours Neighbours;
 
         public Hexagon(int number, Material material)
         {
-            if (number == 7) //TODO zmenit na konstantu
-            {
-                HasPirate = true;
-            }
-            else
-            {
-                HasPirate = false;
-            }
             this.Number = number;
             this.Material = material;
             this.Neighbours = new Neighbours();
@@ -396,7 +402,7 @@ namespace Osadnici
             if (listOfBuildings.Count() != 2) // road does not connect two towns
                 throw new Exception();
 
-            foreach(var entry in listOfBuildings) // zkontrolovat napojeni na vlastni mesto
+            foreach(var entry in listOfBuildings) 
             {
                 if (entry.Item1 != null && entry.Item1 != null)
                 {
@@ -409,8 +415,7 @@ namespace Osadnici
             {
                 if (entry.Item1 != null && entry.Item1 != null)
                 {
-                    Trace.WriteLine(entry.Item2);
-                    var road = entry.Item1.Roads[entry.Item2 - 6];          // fix pada TODO
+                    var road = entry.Item1.Roads[entry.Item2 - 6];      
                     Building connectingBuilding = entry.Item1.Buildings[entry.Item3];
 
                     if (connectingBuilding.Color == Color.None && road.Color == game.GetCurrentPlayer().Color) // roads is interupted by elses building
@@ -620,41 +625,17 @@ namespace Osadnici
         }
         public Player MatchPlayer(List<Player> players)
         {
-            throw new NotImplementedException();
+            foreach (Player player in players)
+            {
+                if (player.Color == this.Color)
+                    return player;
+            }
+            throw new Exception(); // player of given color does not exist
         }
         
     }
-     // TODO použít někde generic method kdekoliv
-
-    // lze zadat string i Card
-   public class Recipe<T>
-    {
-        public List<T> Manual { get; set; }
-        public string Name { get; set; }
-
-        public List<Card> getCards()
-        {
-            if (typeof(T) == typeof(Card))
-                return Manual.Cast<Card>().ToList();
-            if (typeof(T) == typeof(string))
-            {
-                var cardList = new List<Card>();
-                //TODO doprogramovat string převod
-                foreach (var words in Manual)
-                {
-                    string writtenCard = words as string;
-                    var partsOfCard = writtenCard.Split(':');
-                    Material material = (Material)Enum.Parse(typeof(Material), partsOfCard[0]);
-                    int number = Int32.Parse(partsOfCard[1]);
-                    var card = new Card(material, number);
-                    cardList.Add(card);
-                }
-                return cardList;
-            }
-            throw new Exception(); // invalid type
-
-        }
-    }
+   
+   
     public class Player
     {
         public Color Color { get; set; }
@@ -670,9 +651,103 @@ namespace Osadnici
             this.Color = color;
             this.Pawns = SetPawnsList();
             this.Cards = SetCardsList();
-            
         }
 
+        public bool IsEnoughPawns(PawnType type)
+        {
+            foreach(var pawn in Pawns)
+            {
+                if (pawn.Type == type)
+                {
+                    if (pawn.Number > 0)
+                        return true;
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            throw new Exception(); // pawn does not exist
+        }
+
+        // buys a pawn according to recipe using player's cards if successful returns true
+        public bool Buy(Recipe recipe)
+        {
+            if (!this.CheckPawnInInventory(recipe.PawnName)) // if pawn is not in inventory I cannot buy it
+                return false;
+
+            if (!this.CheckCardsForRecipe(recipe.Manual)) // player does not have material for recipe;
+                return false;
+
+            this.BuyByRecipe(recipe); // remove things from inventory according to recipe
+            return true;
+
+        }
+
+        // adds one pawn to the list of given type
+        public void AddPawn(PawnType pawnType)
+        {
+            foreach (var pawn in Pawns)
+            {
+                if (pawn.Type == pawnType)
+                {
+                    pawn.Number++;
+                    return;
+                }
+            }
+            throw new Exception(); // pawn does not exist
+        }
+
+        // removes one pawn from list
+        public void RemovePawn(PawnType pawnType)
+        {
+            foreach (var pawn in Pawns)
+            {
+                if (pawn.Type == pawnType)
+                {
+                    if (pawn.Number <= 0)
+                        throw new Exception(); // should have been positive
+                    else
+                    {
+                        pawn.Number--;
+                        return;
+                    }
+                }
+            }
+            throw new Exception(); // pawn does not exist
+        }
+
+        // checks if searched pawn is in players inventory
+        public bool CheckPawnInInventory(PawnType searchedPawn)
+        {
+            foreach (var inventoryPawn in this.Pawns)
+            {
+                if (inventoryPawn.Type == searchedPawn)
+                {
+                    if (inventoryPawn.Number > 0)
+                        return true;
+                    else
+                        return false;
+                }
+            }
+            throw new Exception(); //pawn is not declared as possibility in players inventory
+        }
+
+        // removes cards from players inventory according to recipe
+        public void BuyByRecipe(Recipe recipe)
+        {
+            foreach (var recipeCard in recipe.Manual)
+            {
+                foreach (var playerCard in this.Cards)
+                {
+                    if (recipeCard.Material == playerCard.Material)
+                    {
+                        playerCard.Number = playerCard.Number - recipeCard.Number;
+                    }
+                }
+            }
+        }
+                
         // inits list of pawns for player and returns it
         private List<Card> SetCardsList()
         {
@@ -680,7 +755,7 @@ namespace Osadnici
             foreach (Material material in Enum.GetValues(typeof(Material)))
             {
                 if (material != Material.None)
-                cardsList.Add(new Card(material:material, number: 0));
+                cardsList.Add(new Card(material:material, number: 20)); // begin with one card from each material
             }
             return cardsList;
         }
@@ -712,13 +787,38 @@ namespace Osadnici
         {
             return Points == 10;
         }
+
+        // check if it is possible to sell constant amount of given material
+        public bool Sell(Material material, Game gameLogic)
+        {
+            
+            foreach (Card card in this.Cards)
+            {
+                if (card.Material == material)
+                {
+                    if (card.Number >= gameLogic.SellConstant)
+                    {
+                        card.Number = card.Number - gameLogic.SellConstant;
+
+                        this.Points++;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+            }
+            throw new Exception(); // card does not exist
+        }
         public int GetSumOfCards()
         {
             var numbers = Cards.Select(x => x.Number);
             return numbers.Sum();
         }
 
-        public bool checkIfCardsForRecipe(List<Card> recipe)
+        public bool CheckCardsForRecipe(List<Card> recipe)
         {
             foreach(Card recipeCard in recipe)
             {
@@ -749,35 +849,67 @@ namespace Osadnici
             Material = material;
         }
     }
+
+    public class Recipe
+    {
+        public List<Card> Manual { get; set; }
+        public PawnType PawnName { get; set; }
+        public Recipe(List<Card> recipe, PawnType pawnName)
+        {
+            this.Manual = recipe;
+            this.PawnName = pawnName;
+        }
+    }
      
     public class Game
     {
-        public int pirateNumber = 7;
+        public int SellConstant = 10;
+        public int PirateNumber = 7;
         public List<Player> Players;
         public Dice Dice;
         public Board Board;
         private int currentPlayer;
         public Pirate Pirate;
-        public bool IsWinner;
         public int minimumPlayers = 2;
         public  int maximumPlayers = 4;
+        public Dictionary <PawnType, Recipe> RecipeRules;
 
 
-        public Game() // TODO init
+        public Game()
         {
+
             this.Board = new Board();
-            IsWinner = false;
             Dice = new Dice();
-            Pirate = new Pirate();
+            Pirate = new Pirate(9); // place pirate to the middle
+            RecipeRules = SetRecipes();
         }
 
+        // creates recipes for game from rules
+        private Dictionary<PawnType, Recipe> SetRecipes()
+        {
+            var recipes = new Dictionary<PawnType, Recipe>();
+            var roadList = new List<Card>();
+            roadList.Add(new Card(Material.Wood, 1));
+            roadList.Add(new Card(Material.Brick, 1));
+            var villageList = new List<Card>();
+            villageList.Add(new Card(Material.Wood, 1));
+            villageList.Add(new Card(Material.Brick, 1));
+            villageList.Add(new Card(Material.Lamb, 1));
+            villageList.Add(new Card(Material.Wheat, 1));
+            var townList = new List<Card>();
+            townList.Add(new Card(Material.Stone, 3));
+            townList.Add(new Card(Material.Wheat, 2));
+
+            recipes.Add(PawnType.Road, new Recipe(pawnName: PawnType.Road, recipe: roadList));
+            recipes.Add(PawnType.Village, new Recipe(pawnName: PawnType.Village, recipe: villageList));
+            recipes.Add(PawnType.Town, new Recipe(pawnName: PawnType.Town, recipe: townList));
+            return recipes;
+        }
         public void ChangeBuildActivity()
         {
-            Trace.WriteLine("entered change");
             var currentPlayer = this.GetCurrentPlayer();
             if (currentPlayer.Activity == Activity.StartFirstVillage)
             {
-                Trace.WriteLine("was changed");
                 currentPlayer.Activity = Activity.StartFirstRoad;
                 return;
             }
@@ -793,7 +925,7 @@ namespace Osadnici
             }   
             if (currentPlayer.Activity == Activity.StartSecondRoad)
             {
-                currentPlayer.Activity = Activity.GettingFirstCards;
+                currentPlayer.Activity = Activity.NoPossibilities;
                 return;
             } 
             if (currentPlayer.Activity == Activity.BuildingRoad)
@@ -839,10 +971,11 @@ namespace Osadnici
         }
         public Player SwitchPlayers()
         {
+            var oldPlayer = GetCurrentPlayer();
+            oldPlayer.Activity = Activity.Rolling;
             currentPlayer = (currentPlayer + 1) % Players.Count;
-            var player = GetCurrentPlayer();
-            player.Activity = Activity.StartFirstRoad;
-            return player;
+            var newPlayer = GetCurrentPlayer();
+            return newPlayer;
         }
 
         // if timing is good roll dice and return true and message, if it is not possible return false and message
@@ -852,112 +985,87 @@ namespace Osadnici
             if (this.GetCurrentPlayer().Activity == Activity.Rolling)
             {
                 ExecuteDice();
-                message = $"You rolled {Dice.Number}";
+                if (Dice.Number == PirateNumber)
+                {
+                    message = $"You rolled {Dice.Number}, click hexagon to move pirate";
+                }
+                else
+                {
+                    message = $"You rolled {Dice.Number}, cards were given";
+                }
                 return (true, message);
             }
             message = "You cannot roll dice now";
             return (false, message);
         }
-        private void ExecuteDice() //TODO
+
+        // fufill actions related to rolling a dice
+        private void ExecuteDice()
         {
             Dice.Roll();
-            //if (Dice.Number == pirateNumber)
-            //{
-            //    GetCurrentPlayer().Activity = Activity.MovingPirate;
-            //    // everybody lose cards if they are above limit
-            //    loseCardsAfterPirate(Players);
-            //    // TODO move pirate
-            //    //TODO kliknu na board a presune se na board s tim cislem a zmeni lokaci pirata Pirate.Location pozor ze musim presunout
-            //    GetCurrentPlayer().Activity = Activity.None;
-            //}
-            //else
-            //{
-            //    GetCurrentPlayer().Activity = Activity.GettingCards;
-            //    giveCardsAfterDice();
-            //    GetCurrentPlayer().Activity = Activity.None;
-            //}
+            if (Dice.Number == PirateNumber)
+            {
+                LoseCardsAfterPirate(Players); // everybody lose cards if they are above limit
+                GetCurrentPlayer().Activity = Activity.MovingPirate; // current player has to move a pirate
+            }
+            else
+            {
+                giveCardsAfterDice();
+                GetCurrentPlayer().Activity = Activity.None;
+            }
            
             
         }
 
-        public void Sell() // check Points TODO ?
-        {
-            throw new NotImplementedException();
-        }
+       
 
-        // recipe generic method TODO staci jen cisla nebo dictonary nebo stringy
-        public bool Buy<T>(Recipe<T> recipe, Player player) // check Points TODO //called after pressing button with image and with recipe according to image
-        {
-            player.Activity = Activity.Buying;
-            //TODO pokud nemam tuhle Pawn v inventari vratim false
-            // check if player has Material
-            bool hasMaterial = player.checkIfCardsForRecipe(recipe.getCards());
-            if (!hasMaterial)
-                return false; // player is not able to buy recipe;
-
-            
-            // TODO buy thing according to recipe
-            BuyByRecipe();
-            player.Activity = Activity.BuildingVillage; // TODO fix
-            // TODO if there is space place it or you can withdraw;
-
-            player.Activity = Activity.None;
-            // check points and if enough then winner
-            this.IsWinner = checkPointsAllPlayers();
-            return true;
-        }
-
-        private void BuyByRecipe() //TODO
-        {
-            throw new NotImplementedException();
-        }
-
-
+       
+       
         private void giveCardsAfterDice()
         {
             var rolledHexagons = Board.MappingNumbers[Dice.Number];
             if (rolledHexagons.Count == 0)
-                throw new Exception(); // pod číslem není hexagon chyba
+                throw new Exception(); // error there is no hexagon with given number
 
             foreach (var hexagon in rolledHexagons) 
             {
-                if (hexagon != Pirate.Location) // když je na hexagonu pirat tak se nic neděje
+                if (hexagon != Board.Hexagons[Pirate.Location]) // if there is pirate on hexagon nothing happens
                 {
                     foreach (var building in hexagon.Buildings)
                     {
-                        if (building != null) //TODO mozna zmenit
+                       if (building != null && building.Color != Color.None)
                             building.AddCardsToPlayer(players: this.Players, hexagon: hexagon);
                     }
-                }
+               }
             }
         }
 
-        // zkontroluje jestli někdo z hráčů nevyhrál
-        private bool checkPointsAllPlayers()
+        // checks if someone has won
+        public Player CheckWinner()
         {
             foreach (var player in Players)
             {
                 if (player.checkPoints())
-                    return true;
+                    return player;
             }
-            return false;
+            return null;
         }
-        // padl pirát, lidé co mají více jak 7 karet, ztrácí kary
-        private void loseCardsAfterPirate(List<Player> players)
+        // players who have more cards than pirateNumber lose half of them. 
+        private void LoseCardsAfterPirate(List<Player> players)
         {
-            // LINQ TODO zkontrolovat
-            var playersOverLimit = from player in players where player.GetSumOfCards() <= pirateNumber select player;
+            // LINQ
+            var playersOverLimit = from player in players where player.GetSumOfCards() <= PirateNumber select player;
             foreach (Player player in players)
             {
-                int numOverLimit = player.GetSumOfCards() - pirateNumber;
+                int losingNumber = (int)((player.GetSumOfCards() / 2) + 0.5);
                 var playersCards = from card in player.Cards where card.Number != 0 select card;
-                dropCards(numOverLimit: numOverLimit, playersCards: playersCards);
+                DropCards(numOverLimit: losingNumber, playersCards: playersCards);
             }
            
         }
 
-        // drop players cards above pirate limit
-        private  void dropCards(int numOverLimit, IEnumerable<Card> playersCards)
+        // drop players cards above pirate limit equally according to material
+        private  void DropCards(int numOverLimit, IEnumerable<Card> playersCards)
         {
             int droppedCards = 0;
             while (droppedCards < numOverLimit)
@@ -974,9 +1082,27 @@ namespace Osadnici
         }
     }
 
-    public class Pirate // TODO mozna se da smazat
+    public class Pirate 
     {
-        public Hexagon Location { get; set; }
+        public int Location { get; set; }
+        public Pirate(int startHexagon)
+        {
+            Location = startHexagon;
+        }
+        public bool PlacePirate(int clickedHexagonIndex, Game gameLogic)
+        {
+            if (Location == clickedHexagonIndex) // cannot place pirate on the same hexagon
+            {
+                return false;
+            }
+            else
+            {
+                Location = clickedHexagonIndex;
+                gameLogic.GetCurrentPlayer().Activity = Activity.None;
+                return true;
+
+            }
+        }
     }
 
     public class Dice

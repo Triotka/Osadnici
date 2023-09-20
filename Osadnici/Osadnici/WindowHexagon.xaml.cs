@@ -24,6 +24,16 @@ namespace Osadnici
         Label annoucmentLabel;
         int clickedHexagonIndex;
 
+
+        public static void CreateActionButtons(int size, RoutedEventHandler pirateHandler, RoutedEventHandler stopBuildHandler, Grid outerGrid)
+        {
+            StackPanel actionStackPanel = new StackPanel();
+            var switchButton = GenericWindow.CreateActionButton(size: size, content: "Stop build", stackPanel: actionStackPanel, handler: stopBuildHandler);
+            var pirateButton = GenericWindow.CreateActionButton(size: size, content: "Place a pirate", stackPanel: actionStackPanel, handler: pirateHandler);
+            outerGrid.Children.Add(actionStackPanel);
+        }
+
+        
         // creates button where you can build
         private void CreateBuildButton(Thickness margin, int size, SolidColorBrush color, int buttonNumber, RoutedEventHandler handler) 
         {
@@ -77,7 +87,7 @@ namespace Osadnici
         }
         private void CreatePickButtons(int hexagonSize, int buttonSize)
         {
-           int buttonNumber = CreateBuildingButtons(hexagonSize: hexagonSize, buttonSize: buttonSize, buttonNumber: 0); //TODO zmenit parametr na prebirani
+           int buttonNumber = CreateBuildingButtons(hexagonSize: hexagonSize, buttonSize: buttonSize, buttonNumber: 0);
             CreateRoadButtons(hexagonSize: hexagonSize, buttonSize: buttonSize, buttonNumber);
         }
 
@@ -114,17 +124,28 @@ namespace Osadnici
 
             if (!sucessfulBuild) // pick other place
             {
-                annoucmentLabel.Content = "Invalid build pick better place or press X on the right to get board view";
+                annoucmentLabel.Content = "Invalid build pick better place or press X";
             }
             else
             {
-               GameLogic.ChangeBuildActivity(); //TODO odkomentovat
-                var mainWindow = new MainWindow(this.GameLogic, "Building was successful");
-                mainWindow.Show();
-                this.Close();
+                GameLogic.ChangeBuildActivity(); 
+                var winner = GameLogic.CheckWinner();
+                if ( winner != null) // check winner
+                {
+                    var winnerWindow = new WinnerWindow(winner);
+                    winnerWindow.Show();
+                    this.Close();
+                }
+                else
+                {
+                    var mainWindow = new MainWindow(this.GameLogic, "Building was successful");
+                    mainWindow.Show();
+                    this.Close();
+                }
+               
             }
 
-            // zobrazeni buildings na main je TODO
+            
         }
         void RoadButton_Click(object sender, EventArgs e)
         {
@@ -134,35 +155,100 @@ namespace Osadnici
 
             if (!sucessfulBuild) // pick other place
             {
-                annoucmentLabel.Content = "Invalid build pick better place or press X on the right to get board view";
+                annoucmentLabel.Content = "Invalid build pick better place or press X";
             }
             else
             {
-                GameLogic.ChangeBuildActivity(); //TODO odkomentovat
-                var mainWindow = new MainWindow(this.GameLogic, "Building was successful");
-                mainWindow.Show();
-                this.Close();
+                GameLogic.ChangeBuildActivity();
+                var winner = GameLogic.CheckWinner();
+                if (winner != null) // check winner
+                {
+                    var winnerWindow = new WinnerWindow(winner);
+                    winnerWindow.Show();
+                    this.Close();
+                }
+                else
+                {
+                    var mainWindow = new MainWindow(this.GameLogic, "Building was successful");
+                    mainWindow.Show();
+                    this.Close();
+                };
+
             }
+        }
+
+        void PirateButton_Click(object sender, RoutedEventArgs e)
+        {
+            string pirateMessage;
+            if (GameLogic.GetCurrentPlayer().Activity == Activity.MovingPirate)
+            {
+                bool sucessfulPirate = GameLogic.Pirate.PlacePirate(clickedHexagonIndex: this.clickedHexagonIndex, gameLogic: this.GameLogic);
+                if (!sucessfulPirate) // pick another place
+                {
+                    pirateMessage = "Pirate is already here, pick different one";
+                }
+                else
+                {
+                    pirateMessage = "Pirate was successful";
+                }
+            }
+            else
+            {
+                pirateMessage = "You cannot move a pirate right now";
+            }
+           
+
+            var mainWindow = new MainWindow(this.GameLogic, pirateMessage);
+            mainWindow.Show();
+            this.Close();
         }
         void ExitButton_Click(object sender, RoutedEventArgs e)
         {
-            var mainWindow = new MainWindow(this.GameLogic, "Choose different place for building");
+            string exitMessage = "Choose different place for building";
+            if (this.GameLogic.GetCurrentPlayer().Activity == Activity.MovingPirate)
+            {
+                exitMessage = "Choose different place for a pirate";
+            }
+            var mainWindow = new MainWindow(this.GameLogic, exitMessage);
             mainWindow.Show();
             this.Close();
         }
 
-        public WindowHexagon(Game game, Polygon clickedHexagon, Button clickedButton, int clickedIndex) // TODO upravit velikost
+        void StopBuildButton_Click(object sender, RoutedEventArgs e)
+        {
+            var player = GameLogic.GetCurrentPlayer();
+            if (player.Activity == Activity.BuildingTown || player.Activity == Activity.BuildingVillage || player.Activity == Activity.BuildingRoad)
+            {
+                player.Activity = Activity.None;
+                string exitMessage = "Building stopped";
+                var mainWindow = new MainWindow(this.GameLogic, exitMessage);
+                mainWindow.Show();
+                this.Close();
+            }
+            else
+            {
+                annoucmentLabel.Content = "Cannot stop building";
+            }
+            
+        }
+
+        public WindowHexagon(Game game, Polygon clickedHexagon, Button clickedButton, int clickedIndex)
         {
             this.GameLogic = game;
             this.clickedHexagonIndex = clickedIndex;
             GenericWindow.SetWindowStyle(window: this);
             InitializeComponent();
-            GenericWindow.CreateExitButton(handler: new RoutedEventHandler(ExitButton_Click), size: 60, outerGrid: outerGrid);
-            this.annoucmentLabel = GenericWindow.CreateAnnoucmentLabel(width: 500, height: 60, outerGrid: outerGrid,
-                                   initMessage: $"Pick a place to build on");
+            var height = SystemParameters.PrimaryScreenHeight;
+            var width = SystemParameters.PrimaryScreenWidth;
+
+            GenericWindow.CreateExitButton(handler: new RoutedEventHandler(ExitButton_Click), size: (int) height / 12, outerGrid: outerGrid);
+            this.annoucmentLabel = GenericWindow.CreateAnnoucmentLabel(width: (int)height, height: (int)height / 12, outerGrid: outerGrid,
+                                    initMessage: $"Pick a place to build on");
             CreateHexagonWithNum(clickedHexagon:clickedHexagon, clickedButton: clickedButton,
-                                margin: new Thickness(0,0, 0, 0), size: 90);
-           CreatePickButtons(270, 40);
+                                margin: new Thickness(0,0, 0, 0), size: (int)height / 8);
+            CreatePickButtons((int) (height / 2.6667), (int)height/18);
+            CreateActionButtons((int)height / 12, new RoutedEventHandler(PirateButton_Click), new RoutedEventHandler(StopBuildButton_Click), outerGrid);
+            
 
 
         }

@@ -24,3 +24,5 @@ C:\Files\Studium\C#\Zápočťák\Osadnici\Osadnici\Osadnici\obj\Debug\net5.0-win
 C:\Files\Studium\C#\Zápočťák\Osadnici\Osadnici\Osadnici\obj\Debug\net5.0-windows\WindowPickPlayers.baml
 C:\Files\Studium\C#\Zápočťák\Osadnici\Osadnici\Osadnici\obj\Debug\net5.0-windows\WindowHexagon.g.cs
 C:\Files\Studium\C#\Zápočťák\Osadnici\Osadnici\Osadnici\obj\Debug\net5.0-windows\WindowHexagon.baml
+C:\Files\Studium\C#\Zápočťák\Osadnici\Osadnici\Osadnici\obj\Debug\net5.0-windows\WinnerWindow.g.cs
+C:\Files\Studium\C#\Zápočťák\Osadnici\Osadnici\Osadnici\obj\Debug\net5.0-windows\WinnerWindow.baml
