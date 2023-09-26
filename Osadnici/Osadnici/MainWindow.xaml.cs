@@ -663,11 +663,12 @@ namespace Osadnici
             Button clickedButton = (Button)sender;
             int clickedIndex = GenericWindow.FindObjectIndex(clickedButton);
             var clickedHexagon = this.hexagons[clickedIndex];
-            var hexagonWindow = new WindowHexagon(game: this.gameLogic, clickedHexagon:clickedHexagon,
-                                                clickedButton: clickedButton, clickedIndex: clickedIndex);
 
-            hexagonWindow.Show();
-            this.Close();
+           
+                var hexagonWindow = new WindowHexagon(game: this.gameLogic, clickedHexagon: clickedHexagon,
+                                                clickedButton: clickedButton, clickedIndex: clickedIndex);
+                hexagonWindow.Show();
+                this.Close();
         }
         void DiceButton_Click(object sender, RoutedEventArgs e)
         {

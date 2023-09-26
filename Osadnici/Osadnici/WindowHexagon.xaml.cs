@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,11 +23,13 @@ namespace Osadnici
 
     public class HexagonActionField
     {
-        public static void CreateActionButtons(int size, RoutedEventHandler pirateHandler, RoutedEventHandler stopBuildHandler, Grid outerGrid)
+        public static void CreateActionButtons(Activity activity, int size, RoutedEventHandler pirateHandler, RoutedEventHandler stopBuildHandler, Grid outerGrid)
         {
             StackPanel actionStackPanel = new StackPanel();
-            var switchButton = GenericWindow.CreateActionButton(size: size, content: "Stop build", stackPanel: actionStackPanel, handler: stopBuildHandler);
-            var pirateButton = GenericWindow.CreateActionButton(size: size, content: "Place a pirate", stackPanel: actionStackPanel, handler: pirateHandler);
+            if (activity == Activity.BuildingTown || activity == Activity.BuildingVillage || activity == Activity.BuildingRoad)
+                GenericWindow.CreateActionButton(size: size, content: "Stop build", stackPanel: actionStackPanel, handler: stopBuildHandler);
+            if (activity == Activity.MovingPirate)
+                GenericWindow.CreateActionButton(size: size, content: "Place a pirate", stackPanel: actionStackPanel, handler: pirateHandler);
             outerGrid.Children.Add(actionStackPanel);
         }
     }
@@ -33,7 +37,19 @@ namespace Osadnici
     public class DrawnBigHexagon
     {
         Polygon drawnHexagon;
+        Game gameLogic;
+        int clickedHexagonIndex;
+
+        public DrawnBigHexagon(Game game, int clickedHexagonIndex)
+        {
+            this.gameLogic = game;
+            this.clickedHexagonIndex = clickedHexagonIndex;
+        }
+
+
+
         // creates button where you can build
+
         private void CreateBuildButton(Thickness margin, int size, SolidColorBrush color, int buttonNumber, RoutedEventHandler handler, Grid outerGrid)
         {
             Button newBtn = new Button();
@@ -48,16 +64,20 @@ namespace Osadnici
         }
 
         // creates buttons where you can place a building
-        private int CreateBuildingButtons(int hexagonSize, int buttonSize, int buttonNumber, RoutedEventHandler handler, Grid outerGrid)
+        private void CreateBuildingButtons(int hexagonSize, int buttonSize, int buttonNumber, RoutedEventHandler handler, Grid outerGrid)
         {
             var pointsList = GenericWindow.GetHexagonPoints(hexagonSize, drawnHexagon);
             foreach (var point in pointsList)
             {
-                CreateBuildButton(margin: new Thickness(point.X, point.Y, 0, 0), size: buttonSize, color: Brushes.LightPink,
+                if (gameLogic.Board.CheckBuildBuilding(gameLogic.Board.Hexagons[this.clickedHexagonIndex], buttonNumber, gameLogic))
+                {
+                    CreateBuildButton(margin: new Thickness(point.X, point.Y, 0, 0), size: buttonSize, color: Brushes.LightPink,
                     buttonNumber: buttonNumber, handler: handler, outerGrid: outerGrid);
+                }
+                
                 buttonNumber++;
             }
-            return buttonNumber;
+           
 
 
         }
@@ -72,21 +92,36 @@ namespace Osadnici
 
             for (int i = -1; i <= 1; i += 2)
             {
-                CreateBuildButton(new Thickness((i * hexagonWidth) / 2, 0, 0, 0), buttonSize, color: Brushes.LightPink,
+                if (gameLogic.Board.CheckRoadBuildOK(gameLogic.Board.Hexagons[this.clickedHexagonIndex], gameLogic, buttonNumber))
+                {
+                    CreateBuildButton(new Thickness((i * hexagonWidth) / 2, 0, 0, 0), buttonSize, color: Brushes.LightPink,
                                                 buttonNumber: buttonNumber, handler, outerGrid);
-                buttonNumber++;
+                }
+                    buttonNumber++;
                 for (int j = -1; j <= 1; j += 2)
                 {
-                    CreateBuildButton(new Thickness((i * hexagonWidth) / 4, (j * hexagonHeight) / 4, 0, 0), buttonSize, color: Brushes.LightPink,
+                    if (gameLogic.Board.CheckRoadBuildOK(gameLogic.Board.Hexagons[this.clickedHexagonIndex], gameLogic, buttonNumber))
+                    {
+                        CreateBuildButton(new Thickness((i * hexagonWidth) / 4, (j * hexagonHeight) / 4, 0, 0), buttonSize, color: Brushes.LightPink,
                                         buttonNumber: buttonNumber, handler, outerGrid);
+                    }
                     buttonNumber++;
                 }
             }
         }
         public void CreatePickButtons(int hexagonSize, int buttonSize, RoutedEventHandler roadHandler, RoutedEventHandler buildingHandler, Grid outerGrid)
         {
-            int buttonNumber = CreateBuildingButtons(hexagonSize: hexagonSize, buttonSize: buttonSize, buttonNumber: 0, buildingHandler, outerGrid);
-            CreateRoadButtons(hexagonSize: hexagonSize, buttonSize: buttonSize, buttonNumber, roadHandler, outerGrid);
+
+            if (gameLogic.GetCurrentPlayer().Activity == Activity.StartFirstVillage || gameLogic.GetCurrentPlayer().Activity == Activity.StartSecondVillage || gameLogic.GetCurrentPlayer().Activity == Activity.BuildingVillage || gameLogic.GetCurrentPlayer().Activity == Activity.BuildingTown)
+            {
+                CreateBuildingButtons(hexagonSize: hexagonSize, buttonSize: buttonSize, buttonNumber: 0, buildingHandler, outerGrid);
+            }
+            else if (gameLogic.GetCurrentPlayer().Activity == Activity.StartFirstRoad || gameLogic.GetCurrentPlayer().Activity == Activity.StartSecondRoad || gameLogic.GetCurrentPlayer().Activity == Activity.BuildingRoad)
+            { 
+                CreateRoadButtons(hexagonSize: hexagonSize, buttonSize: buttonSize, buttonNumber: 6, roadHandler, outerGrid);
+        
+            }
+
         }
 
         private void CreateLabelOnHexagon(Button clickedButton, Thickness margin, int size, Grid outerGrid)
@@ -258,11 +293,11 @@ namespace Osadnici
             GenericWindow.CreateExitButton(handler: new RoutedEventHandler(ExitButton_Click), size: (int) height / 12, outerGrid: outerGrid);
             this.annoucmentLabel = GenericWindow.CreateAnnoucmentLabel(width: (int)height, height: (int)height / 12, outerGrid: outerGrid,
                                    initMessage: $"Pick a place to build on");
-            var drawnHexagon = new DrawnBigHexagon();
+            var drawnHexagon = new DrawnBigHexagon(game, clickedHexagonIndex);
             drawnHexagon.CreateHexagonWithNum(clickedHexagon:clickedHexagon, clickedButton: clickedButton,
                                 margin: new Thickness(0,0, 0, 0), size: (int)height / 8, outerGrid);
             drawnHexagon.CreatePickButtons((int) (height / 2.6667), (int)height/18, new RoutedEventHandler(RoadButton_Click), new RoutedEventHandler(BuildingButton_Click), outerGrid);
-            HexagonActionField.CreateActionButtons((int)height / 12, new RoutedEventHandler(PirateButton_Click), new RoutedEventHandler(StopBuildButton_Click), outerGrid);
+            HexagonActionField.CreateActionButtons(game.GetCurrentPlayer().Activity, (int)height / 12, new RoutedEventHandler(PirateButton_Click), new RoutedEventHandler(StopBuildButton_Click), outerGrid);
             
 
 

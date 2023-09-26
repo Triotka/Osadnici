@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace Osadnici
 {
@@ -25,7 +26,8 @@ namespace Osadnici
             AssignNeighbours();
         }
 
-        public bool BuildRoad(Hexagon clickedHexagon, int clickedIndex, Game game)
+
+        public bool CheckRoadBuildOK(Hexagon clickedHexagon, Game game, int clickedIndex)
         {
             var buildPlace = clickedHexagon.Roads[clickedIndex - 6];
             var player = game.GetCurrentPlayer();
@@ -42,7 +44,15 @@ namespace Osadnici
                 return false;
             }
 
+            return true;
 
+        }
+        public bool BuildRoad(Hexagon clickedHexagon, int clickedIndex, Game game)
+        {
+            if (!CheckRoadBuildOK(clickedHexagon: clickedHexagon, clickedIndex: clickedIndex, game: game))
+                return false;
+
+            var player = game.GetCurrentPlayer();
             var road = new Road(color: player.Color);
             clickedHexagon.Roads[clickedIndex - 6] = road;
             var roadSharedPlace = clickedHexagon.GetSharedRoadPlaces(clickedIndex);
@@ -54,7 +64,7 @@ namespace Osadnici
         }
 
 
-        public bool BuildBuilding(Hexagon clickedHexagon, int clickedIndex, Game game)
+        public bool CheckBuildBuilding(Hexagon clickedHexagon, int clickedIndex, Game game)
         {
             var buildPlace = clickedHexagon.Buildings[clickedIndex];
             var player = game.GetCurrentPlayer();
@@ -79,7 +89,15 @@ namespace Osadnici
                 return false;
             if ((player.Activity == Activity.StartFirstVillage || player.Activity == Activity.StartSecondVillage) && !clickedHexagon.CheckBuildingToRoadConnectivity(clickedIndex, game))
                 return false;
-            
+
+            return true;
+        }
+        public bool BuildBuilding(Hexagon clickedHexagon, int clickedIndex, Game game)
+        {
+            if (!CheckBuildBuilding(clickedHexagon, clickedIndex, game)) 
+                return false;
+
+            var player = game.GetCurrentPlayer();
             var buildingSharedPlaces = clickedHexagon.GetSharedBuildingPlaces(clickedIndex); // list of pairs neighbour and index
 
             if (player.Activity == Activity.BuildingVillage || player.Activity == Activity.StartFirstVillage || player.Activity == Activity.StartSecondVillage) // build village
