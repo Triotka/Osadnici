@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Diagnostics;
-
+using System.Printing;
 
 namespace Osadnici
 {
@@ -37,7 +37,7 @@ namespace Osadnici
 
     class ActionField
     {
-        // creates actionbuttos switch player button and roll dice button
+        // creates action buttons switch player button and roll dice button
         public static void CreateActionButtons(int size, Grid outerGrid, RoutedEventHandler switchButtonHandler, RoutedEventHandler diceButtonHandler)
         {
             StackPanel actionStackPanel = new StackPanel();
@@ -539,16 +539,38 @@ namespace Osadnici
             label.Height = margin * 2;
             label.HorizontalAlignment = HorizontalAlignment.Left;
             label.VerticalAlignment = VerticalAlignment.Center;
-            label.FontSize = margin / 3;
-            //Player player = gameLogic.GetCurrentPlayer();
-            //label.Content = $"Player: {player.Color.ToString()}\nPoints: {player.Points}\nActivity: {player.Activity}";
-           
+            label.FontSize = margin / 3;     
             outerGrid.Children.Add(label);
             this.playerLabel = label;
             UpdatePlayerLabel();
         }
 
-        
+        // creates label with players color, points and activity
+        private void CreatePricesLabel(int size, int margin)
+        {
+            string[] prices = {"Road Price: Brick 1x, Wood 1x\n",
+                                "Town Price: Stone 3x, Wheat 2x\n",
+                                "Village Price: Brick 1x, Wood 1x, Lamb 1x, Wheat 1x"};
+            Label label = new Label();
+            label.Background = Brushes.Transparent;
+            label.Foreground = Brushes.White;
+            label.Width = size * 2;
+            label.Height = margin * 2;
+            label.HorizontalAlignment = HorizontalAlignment.Left;
+            label.VerticalAlignment = VerticalAlignment.Center;
+            label.Margin = new Thickness(0, playerLabel.Height * 2 + margin, 0, 0);
+
+            string priceString = "";
+            foreach (var price in prices)
+            {
+                priceString += price;
+            }
+            label.Content = priceString;
+
+            label.FontSize = margin / 3;
+            outerGrid.Children.Add(label);
+        }
+
         void BoardButton_Click(object sender, RoutedEventArgs e) 
         {
             Button clickedButton = (Button)sender;
@@ -734,6 +756,7 @@ namespace Osadnici
             this.annoucmentLabel = GenericWindow.CreateAnnoucmentLabel(width: (int)height, height: (int)height / 12, outerGrid: outerGrid,
                                    initMessage: initMessage);
             CreatePlayerLabel(size: (int)height / 2, margin: (int)height / 12);
+            CreatePricesLabel(size: (int)height / 2, margin: (int)height / 12);
             new Pawns(game, (int)height / 18, outerGrid, hexagons).CreatePawns((int)height / 36);
            
         }
