@@ -497,28 +497,31 @@ namespace Osadnici
         // maps activity to displayed string
         private string DisplayActivity(Activity activity)
         {
-            if (activity == Activity.StartFirstVillage)
-                return "Building first village";
-            if (activity == Activity.StartSecondVillage)
-                return "Building second village";
-            if (activity == Activity.StartFirstRoad)
-                return "Building first road";
-            if (activity == Activity.StartSecondRoad)
-                return "Building second road";
-            if (activity == Activity.Rolling)
-                return "Must roll a dice";
-            if (activity == Activity.BuildingVillage)
-                return "Building a village";
-            if (activity == Activity.BuildingRoad)
-                return "Building a road";
-            if (activity == Activity.BuildingTown)
-                return "Building a town";
-            if (activity == Activity.MovingPirate)
-                return "Must move a pirate";
-            if (activity == Activity.NoPossibilities)
-                return "No more action";
-            if (activity == Activity.None)
-                return "Waiting for action";
+            switch (activity)
+            {
+                case Activity.StartFirstVillage:
+                    return "Building first village";
+                case Activity.StartSecondVillage:
+                    return "Building second village";
+                case Activity.StartFirstRoad:
+                    return "Building first road";
+                case Activity.StartSecondRoad:
+                    return "Building second road";
+                case Activity.Rolling:
+                    return "Must roll a dice";
+                case Activity.BuildingVillage:
+                    return "Building a village";
+                case Activity.BuildingRoad:
+                    return "Building a road";
+                case Activity.BuildingTown:
+                    return "Building a town";
+                case Activity.MovingPirate:
+                    return "Must move a pirate";
+                case Activity.NoPossibilities:
+                    return "No more action";
+                case Activity.None:
+                    return "Waiting for action";
+            }
             throw new Exception(); //unknown action
         }
 
@@ -545,7 +548,7 @@ namespace Osadnici
             UpdatePlayerLabel();
         }
 
-        // creates label with players color, points and activity
+        // creates label with prices of pawns
         private void CreatePricesLabel(int size, int margin)
         {
             string[] prices = {"Road Price: Brick 1x, Wood 1x\n",
