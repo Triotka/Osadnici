@@ -1,0 +1,12 @@
+{
+  "runtimeOptions": {
+    "tfm": "net7.0",
+    "additionalProbingPaths": [
+      "C:\\Users\\Triotka\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\Triotka\\.nuget\\packages"
+    ],
+    "configProperties": {
+      "Microsoft.NETCore.DotNetHostPolicy.SetAppPaths": true
+    }
+  }
+}

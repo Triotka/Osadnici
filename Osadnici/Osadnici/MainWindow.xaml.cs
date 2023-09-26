@@ -102,7 +102,7 @@ namespace Osadnici
             for (int i = 0; i < names.Length - 1; i++)
             {
                 var newBtn = CreateButtonCard(size);
-                newBtn.Content = $"Sell\n{names[i]}\n{orderedCardsList[i].Number}";
+                newBtn.Content = $"Sell\n{names[i]}\n{orderedCardsList[i].CardsCount}";
                 newBtn.Name = "Button" + names[i];
                 newBtn.AddHandler(Button.ClickEvent, new RoutedEventHandler(handler));
                 buttonStackPanel.Children.Add(newBtn);
@@ -121,7 +121,7 @@ namespace Osadnici
             for (int i = 0; i < names.Length - 1; i++)
             {
                 var newBtn = CreateButtonCard(size);
-                newBtn.Content = $"Buy\n{names[i]}\n{orderedPawnsList[i].Number}";
+                newBtn.Content = $"Buy\n{names[i]}\n{orderedPawnsList[i].PawnsCount}";
                 newBtn.Name = "Button" + names[i];
                 newBtn.AddHandler(Button.ClickEvent, new RoutedEventHandler(handler));
                 buttonStackPanel.Children.Add(newBtn);
