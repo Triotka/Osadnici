@@ -434,6 +434,7 @@ namespace Osadnici
         {
             List<Polygon> hexagons =  CreateHexagons(size: size, start: start);
             CreateBoardButtons(size: size, start: start);
+
             return hexagons;
         }
         private void CreateBoardButtons(int size, Start start)
@@ -660,15 +661,19 @@ namespace Osadnici
 
         void BoardButton_Click(object sender, RoutedEventArgs e) 
         {
+            Activity activity = gameLogic.GetCurrentPlayer().Activity;
             Button clickedButton = (Button)sender;
             int clickedIndex = GenericWindow.FindObjectIndex(clickedButton);
             var clickedHexagon = this.hexagons[clickedIndex];
-
-           
+            if (activity == Activity.StartFirstVillage || activity == Activity.StartSecondVillage || activity == Activity.BuildingVillage
+                || activity == Activity.BuildingTown || activity == Activity.BuildingRoad || activity == Activity.StartFirstRoad || activity == Activity.StartSecondRoad
+                || activity == Activity.MovingPirate)
+            {
                 var hexagonWindow = new WindowHexagon(game: this.gameLogic, clickedHexagon: clickedHexagon,
                                                 clickedButton: clickedButton, clickedIndex: clickedIndex);
                 hexagonWindow.Show();
                 this.Close();
+            }
         }
         void DiceButton_Click(object sender, RoutedEventArgs e)
         {
