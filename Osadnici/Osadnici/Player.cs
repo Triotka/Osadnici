@@ -184,8 +184,7 @@ namespace Osadnici
         }
         public int GetSumOfCards()
         {
-            var numbers = Cards.Select(x => x.CardsCount);
-            return numbers.Sum();
+            return Cards.Sum(c => c.CardsCount);
         }
 
         public bool CheckCardsForRecipe(List<SameCardsSet> recipe)
