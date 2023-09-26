@@ -14,6 +14,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Diagnostics;
 using System.Printing;
+using System.Windows.Media.Media3D;
+using System.Collections;
 
 namespace Osadnici
 {
@@ -50,28 +52,111 @@ namespace Osadnici
        
     }
 
+    enum CardType
+    {
+        Material,
+        Build
+    }
     class CardsSet
     {
         Game gameLogic;
         Grid outerGrid;
-        public CardsSet(Game game, Grid grid)
+        public StackPanel CardPanel;
+
+        public CardsSet(Game game, Grid grid, CardType type, int size, RoutedEventHandler handler)
         {
             this.gameLogic = game;
             this.outerGrid = grid;
+            
+            switch (type)
+            {
+                case CardType.Material:
+                        this.CardPanel = CreateMaterialCards(size: size, handler: handler);
+                        break;
+                case CardType.Build:
+                    this.CardPanel = CreateBuildCards(size: size, handler: handler);
+                        break;
+                default:
+                    throw new Exception(); //invalid card type
+            }
+
+        }
+        // updates build cards
+        public void UpdateBuildCards()
+        {
+
+
+
+
+            StackPanel buttonStackPanel = null;
+            foreach (var component in this.CardPanel.Children)
+            {
+                buttonStackPanel = component as StackPanel;
+            }
+            if (buttonStackPanel == null)
+                throw new Exception(); // no buttons present
+
+            var orderedPawnsList = gameLogic.GetCurrentPlayer().GetOrderedPawns();
+            string[] names = Enum.GetNames(typeof(PawnType));
+            int buttonsFound = 0;
+            foreach (var button in buttonStackPanel.Children)
+            {
+                if (button is Button)
+                {
+                    Button foundButton = button as Button;
+                    if (foundButton != null)
+                    {
+                        foundButton.Content = $"Buy\n{names[buttonsFound]}\n{orderedPawnsList[buttonsFound].PawnsCount}";
+                        buttonsFound++;
+                    }
+
+                }
+            }
+        }
+
+
+        // updates material cards labels
+        public void UpdateMaterialCards()
+        {
+            StackPanel buttonStackPanel = null;
+            foreach (var component in this.CardPanel.Children)
+            {
+                buttonStackPanel = component as StackPanel;
+            }
+            if (buttonStackPanel == null)
+                throw new Exception(); // no buttons present
+            
+            var orderedCardsList = gameLogic.GetCurrentPlayer().GetOrderedCards();
+            string[] names = Enum.GetNames(typeof(Material));
+            int buttonsFound = 0;
+            foreach (var button in buttonStackPanel.Children)
+            {
+                if (button is Button)
+                {
+                    Button foundButton = button as Button;
+                    if (foundButton != null)
+                    {
+                        foundButton.Content = $"Sell\n{names[buttonsFound]}\n{orderedCardsList[buttonsFound].CardsCount}";
+                        buttonsFound++;
+                    }
+                    
+                }
+            }
         }
         // creates cards with material
-        public void CreateMaterialCards(int size, RoutedEventHandler handler)
+        private StackPanel CreateMaterialCards(int size, RoutedEventHandler handler)
         {
-            StackPanel outerStackPanel = new StackPanel();
-            outerStackPanel.Background = ColorMaker.CreateCardBackground();
-            outerStackPanel.Orientation = Orientation.Vertical;
-            outerStackPanel.VerticalAlignment = VerticalAlignment.Bottom;
-            outerStackPanel.HorizontalAlignment = HorizontalAlignment.Right;
+            StackPanel materialStackPanel = new StackPanel();
+            materialStackPanel.Background = ColorMaker.CreateCardBackground();
+            materialStackPanel.Orientation = Orientation.Vertical;
+            materialStackPanel.VerticalAlignment = VerticalAlignment.Bottom;
+            materialStackPanel.HorizontalAlignment = HorizontalAlignment.Right;
             var buildLabel = createsCardsLabel(size: size, "Material");
             var buttonStackPanel = CreateMaterialButtons(size, handler);
-            outerStackPanel.Children.Add(buildLabel);
-            outerStackPanel.Children.Add(buttonStackPanel);
-            outerGrid.Children.Add(outerStackPanel);
+            materialStackPanel.Children.Add(buildLabel);
+            materialStackPanel.Children.Add(buttonStackPanel);
+            outerGrid.Children.Add(materialStackPanel);
+            return materialStackPanel;
         }
 
         // creates button in shape of card
@@ -130,7 +215,7 @@ namespace Osadnici
         }
 
         // creates cards with things I can build/buy
-        public void CreateBuildCards(int size, RoutedEventHandler handler)
+        public StackPanel CreateBuildCards(int size, RoutedEventHandler handler)
         {
             StackPanel outerStackPanel = new StackPanel();
             outerStackPanel.Background = ColorMaker.CreateCardBackground();
@@ -142,6 +227,7 @@ namespace Osadnici
             outerStackPanel.Children.Add(buildLabel);
             outerStackPanel.Children.Add(buttonStackPanel);
             outerGrid.Children.Add(outerStackPanel);
+            return outerStackPanel;
         }
 
         // creates label to describe types of cards
@@ -493,6 +579,8 @@ namespace Osadnici
         Game gameLogic;
         Label playerLabel;
         Label annoucmentLabel;
+        CardsSet materialCards;
+        CardsSet buildCards;
 
         // maps activity to displayed string
         private string DisplayActivity(Activity activity)
@@ -587,12 +675,11 @@ namespace Osadnici
         }
         void DiceButton_Click(object sender, RoutedEventArgs e)
         {
-            (var isRolled, var message) = gameLogic.HandleDiceRequest();
-            var mainWindow = new MainWindow(game: this.gameLogic, message);
-            mainWindow.Show();
-            this.Close();
+            var message = gameLogic.HandleDiceRequest();
+            UpdatePlayerLabel();
+            annoucmentLabel.Content = message;
+            materialCards.UpdateMaterialCards();
             
-
 
         }
         void BuildButton_Click(object sender, RoutedEventArgs e)
@@ -699,7 +786,7 @@ namespace Osadnici
                         else
                         {
                             var mainWindow = new MainWindow(game: this.gameLogic, "Succesful sell");
-                            mainWindow.Show();
+                            mainWindow.Show(); // TODO stejne se smaze
                             this.Close();
                         }
                        
@@ -726,10 +813,9 @@ namespace Osadnici
             {
                 Player player = gameLogic.SwitchPlayers();
                 UpdatePlayerLabel();
-
-                var mainWindow = new MainWindow(game: this.gameLogic, "Switched players");
-                mainWindow.Show();
-                this.Close();
+                materialCards.UpdateMaterialCards();
+                buildCards.UpdateBuildCards();
+                this.annoucmentLabel.Content = "Switched players";
             }
             else
             {
@@ -752,8 +838,8 @@ namespace Osadnici
 
             GenericWindow.CreateExitButton(handler: new RoutedEventHandler(ExitButton_Click), size: (int)height / 12, outerGrid: outerGrid);
             this.hexagons = new DrawnBoard(game: game, boardGrid: boardGrid, handler: new RoutedEventHandler(BoardButton_Click)).CreateBoard(size: (int)height / 18, start: new Start(0, (int)(height / 7.2)));
-            new CardsSet(game: game, grid: outerGrid).CreateBuildCards(size: (int)height / 8, handler: new RoutedEventHandler(BuildButton_Click));
-            new CardsSet(game: game, grid: outerGrid).CreateMaterialCards(size: (int)height / 8, handler: new RoutedEventHandler(MaterialButton_Click));
+            this.buildCards = new CardsSet(game: game, grid: outerGrid, size: (int)height / 8, handler: new RoutedEventHandler(BuildButton_Click), type: CardType.Build);
+            this.materialCards = new CardsSet(game: game, grid: outerGrid, size: (int)height / 8, handler: new RoutedEventHandler(MaterialButton_Click), type: CardType.Material);
             ActionField.CreateActionButtons(size: (int)height/12, outerGrid: outerGrid,
                                             switchButtonHandler: new RoutedEventHandler(SwitchButton_Click), diceButtonHandler: DiceButton_Click);
             this.annoucmentLabel = GenericWindow.CreateAnnoucmentLabel(width: (int)height, height: (int)height / 12, outerGrid: outerGrid,

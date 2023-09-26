@@ -155,8 +155,8 @@ namespace Osadnici
             return newPlayer;
         }
 
-        // if timing is good roll dice and return true and message, if it is not possible return false and message
-        public (bool, string) HandleDiceRequest()
+        // if timing is good roll dice and return right message if invalid return invalid message
+        public string HandleDiceRequest()
         {
             string message;
             if (this.GetCurrentPlayer().Activity == Activity.Rolling)
@@ -170,10 +170,10 @@ namespace Osadnici
                 {
                     message = $"You rolled {Dice.Number}, cards were given";
                 }
-                return (true, message);
+                return message;
             }
             message = "You cannot roll dice now";
-            return (false, message);
+            return message;
         }
 
         // fufill actions related to rolling a dice
