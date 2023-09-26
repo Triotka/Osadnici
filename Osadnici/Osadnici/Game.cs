@@ -231,7 +231,7 @@ namespace Osadnici
         private void LoseCardsAfterPirate(List<Player> players)
         {
             // LINQ
-            var playersOverLimit = from player in players where player.GetSumOfCards() <= PirateNumber select player;
+            var playersOverLimit = from player in players where player.GetSumOfCards() >= PirateNumber select player;
             foreach (Player player in players)
             {
                 int losingNumber = (int)((player.GetSumOfCards() / 2) + 0.5);

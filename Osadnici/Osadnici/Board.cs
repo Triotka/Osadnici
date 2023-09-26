@@ -77,6 +77,9 @@ namespace Osadnici
                 return false;
             if (player.Activity == Activity.BuildingTown && buildPlace.Color != player.Color)
                 return false;
+            if ((player.Activity == Activity.StartFirstVillage || player.Activity == Activity.StartSecondVillage) && !clickedHexagon.CheckBuildingToRoadConnectivity(clickedIndex, game))
+                return false;
+            
             var buildingSharedPlaces = clickedHexagon.GetSharedBuildingPlaces(clickedIndex); // list of pairs neighbour and index
 
             if (player.Activity == Activity.BuildingVillage || player.Activity == Activity.StartFirstVillage || player.Activity == Activity.StartSecondVillage) // build village

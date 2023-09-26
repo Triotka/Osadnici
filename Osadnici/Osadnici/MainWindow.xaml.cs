@@ -84,10 +84,6 @@ namespace Osadnici
         // updates build cards
         public void UpdateBuildCards()
         {
-
-
-
-
             StackPanel buttonStackPanel = null;
             foreach (var component in this.CardPanel.Children)
             {
@@ -106,7 +102,7 @@ namespace Osadnici
                     Button foundButton = button as Button;
                     if (foundButton != null)
                     {
-                        foundButton.Content = $"\n{names[buttonsFound]}\n{orderedPawnsList[buttonsFound].PawnsCount}";
+                        foundButton.Content = $"Buy\n{names[buttonsFound]}\n{orderedPawnsList[buttonsFound].PawnsCount}";
                         buttonsFound++;
                     }
 

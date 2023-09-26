@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,41 +34,103 @@ namespace Osadnici
         // check if building is connected to road
         private bool CheckRoadConnectedToBuilding(int roadIndex)
         {
+
             var list = GetBuildingsConnectedToRoad(roadIndex);
             foreach (var entry in list)
             {
                 if (entry != null && entry.Item1 != null)
+                {
                     if (entry.Item1.Buildings[entry.Item2].Color != Color.None)
                         return true;
+                }
+                    
             }
             return false;
 
         }
 
-        // returns true if it has road ant this road is not connected to other building
+
+
+        // check if every neighbour village from buildingsite is empty
+
+        private bool CheckIsGap(int clickedIndex)
+        {
+            Trace.WriteLine("gap");
+            var listOfRoads = GetRoadsConnectedToBuildingSite(clickedIndex);
+            foreach (var road in listOfRoads)
+            {
+                if (road != null && road.Item1 != null)
+                {
+                    int roadIndex = road.Item2;
+                    var listOfBuilding = GetBuildingsConnectedToRoad(roadIndex);
+                    foreach (var building in listOfBuilding)
+                    {
+                        if (building != null && building.Item1 != null)
+                        {
+                            if (building.Item1.Buildings[building.Item2].Color != Color.None)
+                                return false;
+                        }
+                    }
+                }
+            }
+            return true;
+
+        }
+        // returns true if no road connected to building
+        private bool CheckNoRoads(int clickedIndex)
+        {
+            var listOfRoads = GetRoadsConnectedToBuildingSite(clickedIndex);
+            if (listOfRoads.Count() == 0) // no roads in list
+                return true;
+            foreach (var entry in listOfRoads)
+            {
+                if (entry != null && entry.Item1 != null)
+                {
+                    if (entry.Item1 == null) // hexagon does not exist
+                        continue;
+                    Road road = entry.Item1.Roads[entry.Item2 - 6];
+                    if (road.Color != Color.None)
+                        return false;
+                }
+            }
+            return true;
+
+        }
+        // returns true if it has road and this road is not connected to other building OR is a start and there are no roads and is a gap
         public bool CheckBuildingToRoadConnectivity(int clickedIndex, Game game)
         {
             var listOfRoads = GetRoadsConnectedToBuildingSite(clickedIndex);
-            if (listOfRoads.Count() == 0) // no roads to connect
+
+            // no roads to connect but building a village
+            if (CheckNoRoads(clickedIndex) && game.GetCurrentPlayer().Activity == Activity.BuildingVillage)
+            {
                 return false;
+            }
+
+            // no roads to connect but when it is start then valid
+            if (CheckNoRoads(clickedIndex) && (game.GetCurrentPlayer().Activity == Activity.StartFirstVillage || game.GetCurrentPlayer().Activity == Activity.StartSecondVillage))
+            {
+                Trace.WriteLine("no roads");
+                if (CheckIsGap(clickedIndex))
+                {
+                    return true;
+                }
+                return false;
+            }
+
             foreach (var entry in listOfRoads)
             {
                 if (entry.Item1 == null) // hexagon does not exist
                     continue;
                 Road road = entry.Item1.Roads[entry.Item2 - 6];
-                int roadIndex = entry.Item2 - 6;
+                int roadIndex = entry.Item2;
+
+
 
                 if (road.Color != Color.None && CheckRoadConnectedToBuilding(roadIndex)) // there is a road and is connected to town or village even foreign, road cannot connect two towns
                     return false;
                 if (road.Color == game.GetCurrentPlayer().Color)
-                    return true;
-            }
-
-            // there are only foreign roads or no roads
-            if (game.GetCurrentPlayer().Activity == Activity.StartFirstVillage ||
-                game.GetCurrentPlayer().Activity == Activity.StartSecondVillage)
-            {
-                return true;
+                    return true; 
             }
             return false;
 
