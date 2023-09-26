@@ -106,7 +106,7 @@ namespace Osadnici
                     Button foundButton = button as Button;
                     if (foundButton != null)
                     {
-                        foundButton.Content = $"Buy\n{names[buttonsFound]}\n{orderedPawnsList[buttonsFound].PawnsCount}";
+                        foundButton.Content = $"\n{names[buttonsFound]}\n{orderedPawnsList[buttonsFound].PawnsCount}";
                         buttonsFound++;
                     }
 
@@ -630,7 +630,7 @@ namespace Osadnici
             label.Height = margin * 2;
             label.HorizontalAlignment = HorizontalAlignment.Left;
             label.VerticalAlignment = VerticalAlignment.Center;
-            label.FontSize = margin / 3;     
+            label.FontSize = margin / 3.25;     
             outerGrid.Children.Add(label);
             this.playerLabel = label;
             UpdatePlayerLabel();
@@ -645,7 +645,7 @@ namespace Osadnici
             Label label = new Label();
             label.Background = Brushes.Transparent;
             label.Foreground = Brushes.White;
-            label.Width = size * 2;
+            label.Width = size * 1.25;
             label.Height = margin * 2;
             label.HorizontalAlignment = HorizontalAlignment.Left;
             label.VerticalAlignment = VerticalAlignment.Center;
@@ -658,7 +658,7 @@ namespace Osadnici
             }
             label.Content = priceString;
 
-            label.FontSize = margin / 3;
+            label.FontSize = margin / 3.25;
             outerGrid.Children.Add(label);
         }
 
