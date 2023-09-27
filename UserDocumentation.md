@@ -39,14 +39,19 @@ Jedná se o hru inspirovanou známou deskovou hrou Osadníci z Katanu. Cílem hr
 - Po nákupu probíhá stavba viz Stavba.
 
 #### Prodej
-- Pokud neprobíhá stavba po nákupu, může hráč prodat 10 surovin jednoho druhu a získat za to 1 bod.
-- Akce probíhá kliknutím na tlačítko s názvem dané suroviny.
-- Pokud má hráč méně než 10 kusů této suroviny, akce mu nebude povolena.
+- ve hře je možné obchodovat s jinými hráči nebo s bankou.
+- klikneme na tlačítlo suroviny, kterou chceme prodat
+- objeví se nám nové okno, v něm můžeme vybrat hráče se kterým chceme obchodovat, případně banku.
+- při kliknutí na tlačítko hráče se zobrazí suroviny, které hráč/banka může nabídnout
+- směna s hráči funguje 1 má surovina za 1 hráčovu, směna s bankou je směna 4 mých surovin za 1 z banky.
+- pole banky se zobrazí jen pokud mám dostatek surovin na koupi z ní to je 4 vybrané stejné karty.
+- obchod nemůže protihráč nijak odmítnout.
 
 #### Stavba
 - Při stavbě ubývá daných figurek.
 - Stavba jednotlivých figurek se řídí následujícími pravidly:
     - Nová cesta musí být napojena na město nebo vesnici.
+    - Vesnice/města musí mít mezi sebou vynechané jedno místo pro vesnici/město.
     - Nová vesnice musí být napojena na cestu (vyjímkou je stavba na počátku hry).
     - Město lze postavit je upgradovaním na místě vlastní vesnice. Po stavbě města dostanu figurku vesnice zpět.
     - Nelze stavět na místě, kde má figurku jiný hráč.
@@ -63,9 +68,9 @@ Jedná se o hru inspirovanou známou deskovou hrou Osadníci z Katanu. Cílem hr
 - Body lze získat:
     - Stavba vesnice: 1 bod
     - Stavba města: 1 bod
-    - Prodej 10 surovin: 1 bod
-
-### Statistika hráče
+   
+### Statistika hráče a přehled cen
 - Stav hry lze vidět na levé straně v takzvané statistice hráče. Je zde uvedeno, který hráč je na řadě, jeho body a která akce právě probíhá.
+- Zároveň je na levé straně viditelný přehled cen za jednotlivé figurky.
 
 
