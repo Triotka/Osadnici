@@ -61,6 +61,7 @@ namespace Osadnici
         public int minimumPlayers = 2;
         public  int maximumPlayers = 4;
         public Dictionary <PawnType, Recipe> RecipeRules;
+        public Activity Activity { get; set; }
 
 
         public Game()
@@ -70,6 +71,7 @@ namespace Osadnici
             Dice = new Dice();
             Pirate = new Pirate(9); // place pirate to the middle
             RecipeRules = SetRecipes();
+            this.Activity = Activity.StartFirstVillage;
         }
 
         // creates recipes for game from rules
@@ -95,30 +97,28 @@ namespace Osadnici
         }
         public void ChangeBuildActivity()
         {
-            var currentPlayer = this.GetCurrentPlayer();
-
-            switch(currentPlayer.Activity)
+            switch(Activity)
             {
                 case Activity.StartFirstVillage:
-                    currentPlayer.Activity = Activity.StartFirstRoad;
+                    Activity = Activity.StartFirstRoad;
                     return;
                 case Activity.StartFirstRoad:
-                    currentPlayer.Activity = Activity.StartSecondVillage;
+                    Activity = Activity.StartSecondVillage;
                     return;
                 case Activity.StartSecondVillage:
-                    currentPlayer.Activity = Activity.StartSecondRoad;
+                    Activity = Activity.StartSecondRoad;
                     return;
                 case Activity.StartSecondRoad:
-                    currentPlayer.Activity = Activity.NoPossibilities;
+                    Activity = Activity.NoPossibilities;
                     return;
                 case Activity.BuildingRoad:
-                    currentPlayer.Activity = Activity.None;
+                    Activity = Activity.None;
                     return;
                 case Activity.BuildingVillage:
-                    currentPlayer.Activity = Activity.None;
+                    Activity = Activity.None;
                     return;
                 case Activity.BuildingTown:
-                    currentPlayer.Activity = Activity.None;
+                    Activity = Activity.None;
                     return;
             }
             
@@ -173,20 +173,48 @@ namespace Osadnici
         {
             return Players[currentPlayer];
         }
-        public Player SwitchPlayers()
+
+        private void ChangeSwitchActivity()
         {
-            var oldPlayer = GetCurrentPlayer();
-            oldPlayer.Activity = Activity.Rolling;
+            if (this.Activity == Activity.NoPossibilities)
+            {
+                if (currentPlayer == (Players.Count - 1)) // start finished
+                {
+                    this.Activity = Activity.Rolling;
+                    return;
+                }
+                else
+                {
+                    this.Activity = Activity.StartFirstVillage;
+                    return;
+                }
+            }
+            else if (this.Activity == Activity.None) 
+            {
+                this.Activity = Activity.Rolling;
+                return;
+            }
+        }
+        // switches players and do action and returs message according to activity
+        public string SwitchPlayers()
+        {
+
+            ChangeSwitchActivity();
             currentPlayer = (currentPlayer + 1) % Players.Count;
-            var newPlayer = GetCurrentPlayer();
-            return newPlayer;
+
+            if (this.Activity == Activity.Rolling)
+            {
+                return HandleDiceRequest();
+                
+            }
+            return "Players switched";
         }
 
         // if timing is good roll dice and return right message if invalid return invalid message
         public string HandleDiceRequest()
         {
             string message;
-            if (this.GetCurrentPlayer().Activity == Activity.Rolling)
+            if (Activity == Activity.Rolling)
             {
                 ExecuteDice();
                 if (Dice.Number == PirateNumber)
@@ -210,12 +238,12 @@ namespace Osadnici
             if (Dice.Number == PirateNumber)
             {
                 LoseCardsAfterPirate(Players); // everybody lose cards if they are above limit
-                GetCurrentPlayer().Activity = Activity.MovingPirate; // current player has to move a pirate
+                Activity = Activity.MovingPirate; // current player has to move a pirate
             }
             else
             {
                 giveCardsAfterDice();
-                GetCurrentPlayer().Activity = Activity.None;
+                Activity = Activity.None;
             }
            
             
@@ -259,7 +287,7 @@ namespace Osadnici
         {
             // LINQ
             var playersOverLimit = from player in players where player.GetSumOfCards() >= PirateNumber select player;
-            foreach (Player player in players)
+            foreach (Player player in playersOverLimit)
             {
                 int losingNumber = (int)((player.GetSumOfCards() / 2) + 0.5);
                 var playersCards = from cardSet in player.Cards where cardSet.CardsCount != 0 select cardSet;

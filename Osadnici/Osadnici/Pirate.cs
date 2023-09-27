@@ -22,7 +22,7 @@ namespace Osadnici
             else
             {
                 Location = clickedHexagonIndex;
-                gameLogic.GetCurrentPlayer().Activity = Activity.None;
+                gameLogic.Activity = Activity.None;
                 return true;
 
             }

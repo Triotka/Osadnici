@@ -39,12 +39,12 @@ namespace Osadnici
 
     class ActionField
     {
-        // creates action buttons switch player button and roll dice button
-        public static void CreateActionButtons(int size, Grid outerGrid, RoutedEventHandler switchButtonHandler, RoutedEventHandler diceButtonHandler)
+        // creates action buttons: switch player button
+        public static void CreateActionButtons(int size, Grid outerGrid, RoutedEventHandler switchButtonHandler)
         {
             StackPanel actionStackPanel = new StackPanel();
             var switchButton = GenericWindow.CreateActionButton(size: size, content: "Next player", stackPanel: actionStackPanel, handler: switchButtonHandler);
-            var diceButton = GenericWindow.CreateActionButton(size: size, content: "Roll dice", stackPanel: actionStackPanel, handler: new RoutedEventHandler(diceButtonHandler));
+            
             outerGrid.Children.Add(actionStackPanel);
         }
 
@@ -614,7 +614,7 @@ namespace Osadnici
         private void UpdatePlayerLabel()
         {
             var player = gameLogic.GetCurrentPlayer();
-            this.playerLabel.Content = $"Player: {player.Color}\nPoints: {player.Points}\nActivity: {DisplayActivity(player.Activity)}";
+            this.playerLabel.Content = $"Player: {player.Color}\nPoints: {player.Points}\nActivity: {DisplayActivity(gameLogic.Activity)}";
         }
         // creates label with players color, points and activity
         private void CreatePlayerLabel(int size, int margin)
@@ -661,7 +661,7 @@ namespace Osadnici
 
         void BoardButton_Click(object sender, RoutedEventArgs e) 
         {
-            Activity activity = gameLogic.GetCurrentPlayer().Activity;
+            Activity activity = gameLogic.Activity;
             Button clickedButton = (Button)sender;
             int clickedIndex = GenericWindow.FindObjectIndex(clickedButton);
             var clickedHexagon = this.hexagons[clickedIndex];
@@ -675,20 +675,12 @@ namespace Osadnici
                 this.Close();
                 }
         }
-        void DiceButton_Click(object sender, RoutedEventArgs e)
-        {
-            var message = gameLogic.HandleDiceRequest();
-            UpdatePlayerLabel();
-            annoucmentLabel.Content = message;
-            materialCards.UpdateMaterialCards();
-            
-
-        }
+        
         void BuildButton_Click(object sender, RoutedEventArgs e)
         {
             string unsuccessfulMessage = "Unable to buy";
             string successfulMessage = "Bought";
-            if (gameLogic.GetCurrentPlayer().Activity != Activity.None)
+            if (gameLogic.Activity != Activity.None)
             {
                 annoucmentLabel.Content = unsuccessfulMessage;
                 return;
@@ -714,7 +706,7 @@ namespace Osadnici
                         }
                         else
                         {
-                            gameLogic.GetCurrentPlayer().Activity = Activity.BuildingVillage;
+                            gameLogic.Activity = Activity.BuildingVillage;
                             annoucmentLabel.Content = successfulMessage + " " + nameof(PawnType.Village);
                             UpdatePlayerLabel();
                             return;
@@ -731,7 +723,7 @@ namespace Osadnici
                         }
                         else
                         {
-                            gameLogic.GetCurrentPlayer().Activity = Activity.BuildingTown;
+                            gameLogic.Activity = Activity.BuildingTown;
                             annoucmentLabel.Content = successfulMessage + " " + nameof(PawnType.Town);
                             UpdatePlayerLabel();
                             return;
@@ -748,7 +740,7 @@ namespace Osadnici
                         }
                         else
                         {
-                            gameLogic.GetCurrentPlayer().Activity = Activity.BuildingRoad;
+                            gameLogic.Activity = Activity.BuildingRoad;
                             annoucmentLabel.Content = successfulMessage + " " + nameof(PawnType.Road);
                             UpdatePlayerLabel();
                             return;
@@ -763,7 +755,7 @@ namespace Osadnici
 
         void MaterialButton_Click(object sender, RoutedEventArgs e)
         {
-            if (gameLogic.GetCurrentPlayer().Activity != Activity.None)
+            if (gameLogic.Activity != Activity.None)
             {
                 annoucmentLabel.Content = "Cannot sell";
                 return;
@@ -790,15 +782,13 @@ namespace Osadnici
         }
         void SwitchButton_Click(object sender, RoutedEventArgs e) 
         {
-
-            var currentPlayer = gameLogic.GetCurrentPlayer();
-            if (currentPlayer.Activity == Activity.None || currentPlayer.Activity == Activity.NoPossibilities)
+            if (gameLogic.Activity == Activity.None || gameLogic.Activity == Activity.NoPossibilities)
             {
-                Player player = gameLogic.SwitchPlayers();
+                var message = gameLogic.SwitchPlayers();
                 UpdatePlayerLabel();
                 materialCards.UpdateMaterialCards();
                 buildCards.UpdateBuildCards();
-                this.annoucmentLabel.Content = "Switched players";
+                annoucmentLabel.Content = message;  
             }
             else
             {
@@ -824,7 +814,7 @@ namespace Osadnici
             this.buildCards = new CardsSet(game: game, grid: outerGrid, size: (int)height / 8, handler: new RoutedEventHandler(BuildButton_Click), type: CardType.Build);
             this.materialCards = new CardsSet(game: game, grid: outerGrid, size: (int)height / 8, handler: new RoutedEventHandler(MaterialButton_Click), type: CardType.Material);
             ActionField.CreateActionButtons(size: (int)height/12, outerGrid: outerGrid,
-                                            switchButtonHandler: new RoutedEventHandler(SwitchButton_Click), diceButtonHandler: DiceButton_Click);
+                                            switchButtonHandler: new RoutedEventHandler(SwitchButton_Click));
             this.annoucmentLabel = GenericWindow.CreateAnnoucmentLabel(width: (int)height, height: (int)height / 12, outerGrid: outerGrid,
                                    initMessage: initMessage);
             CreatePlayerLabel(size: (int)height / 2, margin: (int)height / 12);

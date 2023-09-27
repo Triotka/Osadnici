@@ -112,11 +112,11 @@ namespace Osadnici
         public void CreatePickButtons(int hexagonSize, int buttonSize, RoutedEventHandler roadHandler, RoutedEventHandler buildingHandler, Grid outerGrid)
         {
 
-            if (gameLogic.GetCurrentPlayer().Activity == Activity.StartFirstVillage || gameLogic.GetCurrentPlayer().Activity == Activity.StartSecondVillage || gameLogic.GetCurrentPlayer().Activity == Activity.BuildingVillage || gameLogic.GetCurrentPlayer().Activity == Activity.BuildingTown)
+            if (gameLogic.Activity == Activity.StartFirstVillage || gameLogic.Activity == Activity.StartSecondVillage || gameLogic.Activity == Activity.BuildingVillage || gameLogic.Activity == Activity.BuildingTown)
             {
                 CreateBuildingButtons(hexagonSize: hexagonSize, buttonSize: buttonSize, buttonNumber: 0, buildingHandler, outerGrid);
             }
-            else if (gameLogic.GetCurrentPlayer().Activity == Activity.StartFirstRoad || gameLogic.GetCurrentPlayer().Activity == Activity.StartSecondRoad || gameLogic.GetCurrentPlayer().Activity == Activity.BuildingRoad)
+            else if (gameLogic.Activity == Activity.StartFirstRoad || gameLogic.Activity == Activity.StartSecondRoad || gameLogic.Activity == Activity.BuildingRoad)
             { 
                 CreateRoadButtons(hexagonSize: hexagonSize, buttonSize: buttonSize, buttonNumber: 6, roadHandler, outerGrid);
         
@@ -149,7 +149,7 @@ namespace Osadnici
     }
     public partial class WindowHexagon : Window
     {
-        Game GameLogic;
+        Game gameLogic;
         Label annoucmentLabel;
         int clickedHexagonIndex;
 
@@ -168,8 +168,8 @@ namespace Osadnici
         {
             // index of button I picked
             int buttonIndex = GenericWindow.FindObjectIndex((Button)sender);
-            bool sucessfulBuild = GameLogic.Board.BuildBuilding(clickedHexagon: GameLogic.Board.Hexagons[this.clickedHexagonIndex],
-                                  clickedIndex: buttonIndex, game: this.GameLogic);
+            bool sucessfulBuild = gameLogic.Board.BuildBuilding(clickedHexagon: gameLogic.Board.Hexagons[this.clickedHexagonIndex],
+                                  clickedIndex: buttonIndex, game: this.gameLogic);
 
             if (!sucessfulBuild) // pick other place
             {
@@ -177,8 +177,8 @@ namespace Osadnici
             }
             else
             {
-                GameLogic.ChangeBuildActivity(); 
-                var winner = GameLogic.CheckWinner();
+                gameLogic.ChangeBuildActivity(); 
+                var winner = gameLogic.CheckWinner();
                 if ( winner != null) // check winner
                 {
                     var winnerWindow = new WinnerWindow(winner);
@@ -187,7 +187,7 @@ namespace Osadnici
                 }
                 else
                 {
-                    var mainWindow = new MainWindow(this.GameLogic, "Building was successful");
+                    var mainWindow = new MainWindow(this.gameLogic, "Building was successful");
                     mainWindow.Show();
                     this.Close();
                 }
@@ -199,8 +199,8 @@ namespace Osadnici
         void RoadButton_Click(object sender, EventArgs e)
         {
             int buttonIndex = GenericWindow.FindObjectIndex((Button)sender);
-            bool sucessfulBuild = GameLogic.Board.BuildRoad(clickedHexagon: GameLogic.Board.Hexagons[this.clickedHexagonIndex],
-                                  clickedIndex: buttonIndex, game: this.GameLogic);
+            bool sucessfulBuild = gameLogic.Board.BuildRoad(clickedHexagon: gameLogic.Board.Hexagons[this.clickedHexagonIndex],
+                                  clickedIndex: buttonIndex, game: this.gameLogic);
 
             if (!sucessfulBuild) // pick other place
             {
@@ -208,8 +208,8 @@ namespace Osadnici
             }
             else
             {
-                GameLogic.ChangeBuildActivity();
-                var winner = GameLogic.CheckWinner();
+                gameLogic.ChangeBuildActivity();
+                var winner = gameLogic.CheckWinner();
                 if (winner != null) // check winner
                 {
                     var winnerWindow = new WinnerWindow(winner);
@@ -218,7 +218,7 @@ namespace Osadnici
                 }
                 else
                 {
-                    var mainWindow = new MainWindow(this.GameLogic, "Building was successful");
+                    var mainWindow = new MainWindow(this.gameLogic, "Building was successful");
                     mainWindow.Show();
                     this.Close();
                 };
@@ -229,9 +229,9 @@ namespace Osadnici
         void PirateButton_Click(object sender, RoutedEventArgs e)
         {
             string pirateMessage;
-            if (GameLogic.GetCurrentPlayer().Activity == Activity.MovingPirate)
+            if (gameLogic.Activity == Activity.MovingPirate)
             {
-                bool sucessfulPirate = GameLogic.Pirate.PlacePirate(clickedHexagonIndex: this.clickedHexagonIndex, gameLogic: this.GameLogic);
+                bool sucessfulPirate = gameLogic.Pirate.PlacePirate(clickedHexagonIndex: this.clickedHexagonIndex, gameLogic: this.gameLogic);
                 if (!sucessfulPirate) // pick another place
                 {
                     pirateMessage = "Pirate is already here, pick different one";
@@ -247,30 +247,30 @@ namespace Osadnici
             }
            
 
-            var mainWindow = new MainWindow(this.GameLogic, pirateMessage);
+            var mainWindow = new MainWindow(this.gameLogic, pirateMessage);
             mainWindow.Show();
             this.Close();
         }
         void ExitButton_Click(object sender, RoutedEventArgs e)
         {
             string exitMessage = "Choose different place for building";
-            if (this.GameLogic.GetCurrentPlayer().Activity == Activity.MovingPirate)
+            if (this.gameLogic.Activity == Activity.MovingPirate)
             {
                 exitMessage = "Choose different place for a pirate";
             }
-            var mainWindow = new MainWindow(this.GameLogic, exitMessage);
+            var mainWindow = new MainWindow(this.gameLogic, exitMessage);
             mainWindow.Show();
             this.Close();
         }
 
         void StopBuildButton_Click(object sender, RoutedEventArgs e)
         {
-            var player = GameLogic.GetCurrentPlayer();
-            if (player.Activity == Activity.BuildingTown || player.Activity == Activity.BuildingVillage || player.Activity == Activity.BuildingRoad)
+            var player = gameLogic.GetCurrentPlayer();
+            if (gameLogic.Activity == Activity.BuildingTown || gameLogic.Activity == Activity.BuildingVillage || gameLogic.Activity == Activity.BuildingRoad)
             {
-                player.Activity = Activity.None;
+                gameLogic.Activity = Activity.None;
                 string exitMessage = "Building stopped";
-                var mainWindow = new MainWindow(this.GameLogic, exitMessage);
+                var mainWindow = new MainWindow(this.gameLogic, exitMessage);
                 mainWindow.Show();
                 this.Close();
             }
@@ -283,7 +283,7 @@ namespace Osadnici
 
         public WindowHexagon(Game game, Polygon clickedHexagon, Button clickedButton, int clickedIndex)
         {
-            this.GameLogic = game;
+            this.gameLogic = game;
             this.clickedHexagonIndex = clickedIndex;
             GenericWindow.SetWindowStyle(window: this);
             InitializeComponent();
@@ -297,7 +297,7 @@ namespace Osadnici
             drawnHexagon.CreateHexagonWithNum(clickedHexagon:clickedHexagon, clickedButton: clickedButton,
                                 margin: new Thickness(0,0, 0, 0), size: (int)height / 8, outerGrid);
             drawnHexagon.CreatePickButtons((int) (height / 2.6667), (int)height/18, new RoutedEventHandler(RoadButton_Click), new RoutedEventHandler(BuildingButton_Click), outerGrid);
-            HexagonActionField.CreateActionButtons(game.GetCurrentPlayer().Activity, (int)height / 12, new RoutedEventHandler(PirateButton_Click), new RoutedEventHandler(StopBuildButton_Click), outerGrid);
+            HexagonActionField.CreateActionButtons(gameLogic.Activity, (int)height / 12, new RoutedEventHandler(PirateButton_Click), new RoutedEventHandler(StopBuildButton_Click), outerGrid);
             
 
 

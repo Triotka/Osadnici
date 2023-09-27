@@ -32,8 +32,8 @@ namespace Osadnici
             var buildPlace = clickedHexagon.Roads[clickedIndex - 6];
             var player = game.GetCurrentPlayer();
 
-            if (player.Activity != Activity.BuildingRoad && player.Activity != Activity.StartFirstRoad
-                && player.Activity != Activity.StartSecondRoad) // you are not building a road
+            if (game.Activity != Activity.BuildingRoad && game.Activity != Activity.StartFirstRoad
+                && game.Activity != Activity.StartSecondRoad) // you are not building a road
                 return false;
             if (buildPlace.Color != Color.None) // there is akready a road
                 return false;
@@ -68,26 +68,26 @@ namespace Osadnici
         {
             var buildPlace = clickedHexagon.Buildings[clickedIndex];
             var player = game.GetCurrentPlayer();
-            if (player.Activity != Activity.BuildingVillage && player.Activity != Activity.BuildingTown &&
-                player.Activity != Activity.StartFirstVillage && player.Activity != Activity.StartSecondVillage) // not building right type
+            if (game.Activity != Activity.BuildingVillage && game.Activity != Activity.BuildingTown &&
+                game.Activity != Activity.StartFirstVillage && game.Activity != Activity.StartSecondVillage) // not building right type
                 return false;
             if (buildPlace.Color != Color.None && buildPlace.Color != player.Color) // there is foreign building
                 return false;
 
-            if (buildPlace.Color != Color.None && buildPlace.Type == PawnType.Village && player.Activity != Activity.BuildingTown) // you can build on village only if you upgrade to town
+            if (buildPlace.Color != Color.None && buildPlace.Type == PawnType.Village && game.Activity != Activity.BuildingTown) // you can build on village only if you upgrade to town
                 return false;
 
             if (buildPlace.Color != Color.None && buildPlace.Type == PawnType.Town) // there is already your town you cannot uprgrade
                 return false;
-            if (player.Activity == Activity.BuildingVillage && !(clickedHexagon.CheckBuildingToRoadConnectivity(clickedIndex, game)))
+            if (game.Activity == Activity.BuildingVillage && !(clickedHexagon.CheckBuildingToRoadConnectivity(clickedIndex, game)))
                 return false;
-            if (player.Activity == Activity.BuildingTown && !player.IsEnoughPawns(PawnType.Town))
+            if (game.Activity == Activity.BuildingTown && !player.IsEnoughPawns(PawnType.Town))
                 return false;
-            if (player.Activity == Activity.BuildingVillage && !player.IsEnoughPawns(PawnType.Village))
+            if (game.Activity == Activity.BuildingVillage && !player.IsEnoughPawns(PawnType.Village))
                 return false;
-            if (player.Activity == Activity.BuildingTown && buildPlace.Color != player.Color)
+            if (game.Activity == Activity.BuildingTown && buildPlace.Color != player.Color)
                 return false;
-            if ((player.Activity == Activity.StartFirstVillage || player.Activity == Activity.StartSecondVillage) && !clickedHexagon.CheckBuildingToRoadConnectivity(clickedIndex, game))
+            if ((game.Activity == Activity.StartFirstVillage || game.Activity == Activity.StartSecondVillage) && !clickedHexagon.CheckBuildingToRoadConnectivity(clickedIndex, game))
                 return false;
 
             return true;
@@ -100,7 +100,7 @@ namespace Osadnici
             var player = game.GetCurrentPlayer();
             var buildingSharedPlaces = clickedHexagon.GetSharedBuildingPlaces(clickedIndex); // list of pairs neighbour and index
 
-            if (player.Activity == Activity.BuildingVillage || player.Activity == Activity.StartFirstVillage || player.Activity == Activity.StartSecondVillage) // build village
+            if (game.Activity == Activity.BuildingVillage || game.Activity == Activity.StartFirstVillage || game.Activity == Activity.StartSecondVillage) // build village
             {
                 var village = new Village(color: player.Color);
                 clickedHexagon.Buildings[clickedIndex] = village;

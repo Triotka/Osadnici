@@ -11,14 +11,12 @@ namespace Osadnici
     {
         public Color Color { get; set; }
         public int Points { get; set; }
-        public Activity Activity { get; set; }
         public List<SamePawnSet> PawnSets;
         public List<SameCardsSet> Cards;
 
         public Player(Color color, int startCardCount = 1)
         {
             this.Points = 0;
-            this.Activity = Activity.StartFirstVillage;
             this.Color = color;
             this.PawnSets = SetPawnsList();
             this.Cards = SetCardsList(startCardCount);

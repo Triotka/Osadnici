@@ -55,7 +55,6 @@ namespace Osadnici
 
         private bool CheckIsGap(int clickedIndex)
         {
-            Trace.WriteLine("gap");
             var listOfRoads = GetRoadsConnectedToBuildingSite(clickedIndex);
             foreach (var road in listOfRoads)
             {
@@ -102,15 +101,14 @@ namespace Osadnici
             var listOfRoads = GetRoadsConnectedToBuildingSite(clickedIndex);
 
             // no roads to connect but building a village
-            if (CheckNoRoads(clickedIndex) && game.GetCurrentPlayer().Activity == Activity.BuildingVillage)
+            if (CheckNoRoads(clickedIndex) && game.Activity == Activity.BuildingVillage)
             {
                 return false;
             }
 
             // no roads to connect but when it is start then valid
-            if (CheckNoRoads(clickedIndex) && (game.GetCurrentPlayer().Activity == Activity.StartFirstVillage || game.GetCurrentPlayer().Activity == Activity.StartSecondVillage))
+            if (CheckNoRoads(clickedIndex) && (game.Activity == Activity.StartFirstVillage || game.Activity == Activity.StartSecondVillage))
             {
-                Trace.WriteLine("no roads");
                 if (CheckIsGap(clickedIndex))
                 {
                     return true;
