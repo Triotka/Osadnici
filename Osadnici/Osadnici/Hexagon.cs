@@ -61,13 +61,15 @@ namespace Osadnici
                 if (road != null && road.Item1 != null)
                 {
                     int roadIndex = road.Item2;
-                    var listOfBuilding = GetBuildingsConnectedToRoad(roadIndex);
+                    var listOfBuilding = road.Item1.GetBuildingsConnectedToRoad(roadIndex);
                     foreach (var building in listOfBuilding)
                     {
                         if (building != null && building.Item1 != null)
                         {
                             if (building.Item1.Buildings[building.Item2].Color != Color.None)
+                            {
                                 return false;
+                            }     
                         }
                     }
                 }
@@ -99,7 +101,6 @@ namespace Osadnici
         public bool CheckBuildingToRoadConnectivity(int clickedIndex, Game game)
         {
             var listOfRoads = GetRoadsConnectedToBuildingSite(clickedIndex);
-
             // no roads to connect but building a village
             if (CheckNoRoads(clickedIndex) && game.Activity == Activity.BuildingVillage)
             {
@@ -112,6 +113,7 @@ namespace Osadnici
                 if (CheckIsGap(clickedIndex))
                 {
                     return true;
+
                 }
                 return false;
             }
