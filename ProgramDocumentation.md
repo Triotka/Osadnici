@@ -55,7 +55,9 @@ Ke kontrole staveb a stavbě samotné jsou využívány různé funkce vracejíc
 Ihned po umistění budovy dostává hráč body a taky je kontrolováno, zda hráč vyhrál.
 
 ## Ovládání tlačítek a aktivity
-Akce různých tlačítek je často závisla na enum Activity, která určuje která akce zrovna probíhá. Některá tlačítka se zobrazí jen při některých aktivitách. Po různých aktivitách jako stavba nebo přesun piráta je třeba myslet na to, aby došlo ke změně aktivty a také vizuálně updatovaní příslušných zobrazených karet nebo Player label, aby došlo k aktualizování informace.
+Akce různých tlačítek je často závisla na enum Activity, která určuje která akce zrovna probíhá. Některá tlačítka se zobrazí jen při některých aktivitách. Například také červený obrys při najetí na hrací políčko je zobrazován vždy ale jen pokud je správná aktivita na něj lze kliknout.
+
+Po různých aktivitách jako stavba nebo přesun piráta je třeba myslet na to, aby došlo ke změně aktivty a také vizuálně updatovaní příslušných zobrazených karet nebo Player label, aby došlo k aktualizování informace.
 
 ## Hod kostkou a změna hráče
 Hod kostkou probíhá automaticky po přepnutí SwitchPlayers. Dojde k tomu, ale jen v případě, že nejsme v ve fázi počáteční stavby, je to určeno Activity. Pokud dojde k hodu kostkou jsou i automaticky přiřazeny karty nebo ztraceny, případně se přepne na Activity.MovingPirate a je třeba přesunout piráta.
