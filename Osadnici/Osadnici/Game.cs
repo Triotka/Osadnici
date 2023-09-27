@@ -78,22 +78,175 @@ namespace Osadnici
         private Dictionary<PawnType, Recipe> SetRecipes()
         {
             var recipes = new Dictionary<PawnType, Recipe>();
-            var roadList = new List<SameCardsSet>();
-            roadList.Add(new SameCardsSet(Material.Wood, 1));
-            roadList.Add(new SameCardsSet(Material.Brick, 1));
-            var villageList = new List<SameCardsSet>();
-            villageList.Add(new SameCardsSet(Material.Wood, 1));
-            villageList.Add(new SameCardsSet(Material.Brick, 1));
-            villageList.Add(new SameCardsSet(Material.Lamb, 1));
-            villageList.Add(new SameCardsSet(Material.Wheat, 1));
-            var townList = new List<SameCardsSet>();
-            townList.Add(new SameCardsSet(Material.Stone, 3));
-            townList.Add(new SameCardsSet(Material.Wheat, 2));
+            var roadList = new List<SameCardsSet>
+            {
+                new SameCardsSet(Material.Wood, 1),
+                new SameCardsSet(Material.Brick, 1)
+            };
+            var villageList = new List<SameCardsSet>
+            {
+                new SameCardsSet(Material.Wood, 1),
+                new SameCardsSet(Material.Brick, 1),
+                new SameCardsSet(Material.Lamb, 1),
+                new SameCardsSet(Material.Wheat, 1)
+            };
+            var townList = new List<SameCardsSet>
+            {
+                new SameCardsSet(Material.Stone, 3),
+                new SameCardsSet(Material.Wheat, 2)
+            };
 
             recipes.Add(PawnType.Road, new Recipe(pawnName: PawnType.Road, recipe: roadList));
             recipes.Add(PawnType.Village, new Recipe(pawnName: PawnType.Village, recipe: villageList));
             recipes.Add(PawnType.Town, new Recipe(pawnName: PawnType.Town, recipe: townList));
             return recipes;
+        }
+
+
+        // checks if building is possible if so does action and returns messages
+        public string BuildAction(string pickedName)
+        {
+            string unsuccessfulMessage = "Unable to buy";
+            string successfulMessage = "Bought";
+            if (this.Activity != Activity.None)
+            {
+                 return unsuccessfulMessage;
+            }
+
+            string[] names = Enum.GetNames(typeof(PawnType));
+
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                if (pickedName.EndsWith(names[i]))
+                {
+
+                    bool successfulBuy = false;
+                    if (names[i] == PawnType.Village.ToString())
+                    {
+                        successfulBuy = GetCurrentPlayer().Buy(RecipeRules[PawnType.Village]);
+                        if (!successfulBuy)
+                        {
+                            return unsuccessfulMessage + " " + nameof(PawnType.Village);
+                        }
+                        else
+                        {
+                            Activity = Activity.BuildingVillage;
+                            return successfulMessage + " " + nameof(PawnType.Village);
+                        }
+                    }
+                    if (names[i] == nameof(PawnType.Town))
+                    {
+                        successfulBuy = GetCurrentPlayer().Buy(RecipeRules[PawnType.Town]);
+                        if (!successfulBuy)
+                        {
+                            return unsuccessfulMessage + " " + nameof(PawnType.Town);
+                        }
+                        else
+                        {
+                            Activity = Activity.BuildingTown;
+                            return successfulMessage + " " + nameof(PawnType.Town);
+                        }
+                    }
+                    if (names[i] == nameof(PawnType.Road))
+                    {
+                        successfulBuy = GetCurrentPlayer().Buy(RecipeRules[PawnType.Road]);
+
+                        if (!successfulBuy)
+                        {
+                            return unsuccessfulMessage + " " + nameof(PawnType.Road);
+                        }
+                        else
+                        {
+                            Activity = Activity.BuildingRoad;
+                            return successfulMessage + " " + nameof(PawnType.Road);
+                        }
+
+                    }
+
+                }
+            }
+            return unsuccessfulMessage;
+        }
+
+        // checks if selling action is ok and if yes returs picked cards, can return a message
+        public (string, SameCardsSet) SellAction(string clickedName)
+        {
+            if (Activity != Activity.None)
+            {
+                return ("Cannot sell", null);
+            }
+
+            foreach (var material in Enum.GetValues(typeof(Material)).Cast<Material>())
+            {
+                if (clickedName.EndsWith(material.ToString()))
+                {
+                    return ("Successful sell", GetCurrentPlayer().CardSetByMaterial(material));
+                    
+                }
+            }
+            return ("Cannot sell", null);
+        }
+
+        // returns true if it ok to interact with board according to activity
+        public bool IsBoardInteraction() // you can zoom on board piece
+        {
+            if (this.Activity == Activity.StartFirstVillage || this.Activity == Activity.StartSecondVillage || this.Activity == Activity.BuildingVillage
+                || this.Activity == Activity.BuildingTown || this.Activity == Activity.BuildingRoad || this.Activity == Activity.StartFirstRoad || this.Activity == Activity.StartSecondRoad
+                || this.Activity == Activity.MovingPirate)
+                return true;
+
+            return false;
+        }
+
+        // returns message according to result of pirate action
+        public string PirateAction(int clickedHexagonIndex)
+        {
+            if (Activity == Activity.MovingPirate)
+            {
+                bool sucessfulPirate = Pirate.PlacePirate(clickedHexagonIndex: clickedHexagonIndex, gameLogic: this);
+                if (!sucessfulPirate) // pick another place
+                {
+                    return "Pirate is already here, pick different one";
+                }
+                else
+                {
+                    return "Pirate was successful";
+                }
+            }
+            else
+            {
+                return "You cannot move a pirate right now";
+            }
+        }
+        public string ActivityToString()
+        {
+            switch (this.Activity)
+            {
+                case Activity.StartFirstVillage:
+                    return "Building first village";
+                case Activity.StartSecondVillage:
+                    return "Building second village";
+                case Activity.StartFirstRoad:
+                    return "Building first road";
+                case Activity.StartSecondRoad:
+                    return "Building second road";
+                case Activity.Rolling:
+                    return "Must roll a dice";
+                case Activity.BuildingVillage:
+                    return "Building a village";
+                case Activity.BuildingRoad:
+                    return "Building a road";
+                case Activity.BuildingTown:
+                    return "Building a town";
+                case Activity.MovingPirate:
+                    return "Must move a pirate";
+                case Activity.NoPossibilities:
+                    return "No more action";
+                case Activity.None:
+                    return "Waiting for action";
+            }
+            throw new Exception(); //unknown action
         }
         public void ChangeBuildActivity()
         {
@@ -198,16 +351,19 @@ namespace Osadnici
         // switches players and do action and returs message according to activity
         public string SwitchPlayers()
         {
-
-            ChangeSwitchActivity();
-            currentPlayer = (currentPlayer + 1) % Players.Count;
-
-            if (this.Activity == Activity.Rolling)
+            if (Activity == Activity.None || Activity == Activity.NoPossibilities)
             {
-                return HandleDiceRequest();
-                
+                ChangeSwitchActivity();
+                currentPlayer = (currentPlayer + 1) % Players.Count;
+
+                if (this.Activity == Activity.Rolling)
+                {
+                    return HandleDiceRequest();
+
+                }
+                return "Players switched";
             }
-            return "Players switched";
+            return "You cannot switch players";
         }
 
         // if timing is good roll dice and return right message if invalid return invalid message

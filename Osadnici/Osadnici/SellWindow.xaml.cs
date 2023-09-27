@@ -58,10 +58,6 @@ namespace Osadnici
             {
                 throw new Exception(); // invalid index
             }
-            
-
-
-           
         }
         void CardButton_Click(object sender, RoutedEventArgs e)
         {
