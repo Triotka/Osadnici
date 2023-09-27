@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Intrinsics.Arm;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,13 +15,13 @@ namespace Osadnici
         public List<SamePawnSet> PawnSets;
         public List<SameCardsSet> Cards;
 
-        public Player(Color color)
+        public Player(Color color, int startCardCount = 1)
         {
             this.Points = 0;
             this.Activity = Activity.StartFirstVillage;
             this.Color = color;
             this.PawnSets = SetPawnsList();
-            this.Cards = SetCardsList();
+            this.Cards = SetCardsList(startCardCount);
         }
 
         public bool IsEnoughPawns(PawnType type)
@@ -118,14 +119,20 @@ namespace Osadnici
             }
         }
 
+        // returns a list of cards that picked player can offer for exchange
+        public IEnumerable <SameCardsSet> GetOfferedCards() 
+        {
+            return from cardSet in GetOrderedCards() where cardSet.CardsCount > 0 select cardSet;
+            
+        }
         // inits list of pawns for player and returns it
-        private List<SameCardsSet> SetCardsList()
+        private List<SameCardsSet> SetCardsList(int startCardCount = 1)
         {
             var cardsList = new List<SameCardsSet>();
             foreach (Material material in Enum.GetValues(typeof(Material)))
             {
                 if (material != Material.None)
-                    cardsList.Add(new SameCardsSet(material: material, cardsCount: 20)); // begin with one card from each material
+                    cardsList.Add(new SameCardsSet(material: material, cardsCount: startCardCount)); // begin with one card from each material
             }
             return cardsList;
         }
@@ -140,7 +147,15 @@ namespace Osadnici
 
             return pawnsList;
         }
-
+        public SameCardsSet CardSetByMaterial(Material material)
+        {
+            foreach (var cardSet in Cards) 
+            { 
+                if (cardSet.Material == material)
+                    return cardSet;
+            }
+            throw new Exception(); // material does not exist
+        }
         // returns ordered pawns by enum PawnType
         public List<SamePawnSet> GetOrderedPawns()
         {
@@ -158,30 +173,6 @@ namespace Osadnici
             return Points == 10;
         }
 
-        // check if it is possible to sell constant amount of given material
-        public bool Sell(Material material, Game gameLogic)
-        {
-
-            foreach (SameCardsSet cardSet in this.Cards)
-            {
-                if (cardSet.Material == material)
-                {
-                    if (cardSet.CardsCount >= gameLogic.SellConstant)
-                    {
-                        cardSet.CardsCount = cardSet.CardsCount - gameLogic.SellConstant;
-
-                        this.Points++;
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-
-            }
-            throw new Exception(); // card does not exist
-        }
         public int GetSumOfCards()
         {
             return Cards.Sum(c => c.CardsCount);

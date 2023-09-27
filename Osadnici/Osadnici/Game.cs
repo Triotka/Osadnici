@@ -51,7 +51,7 @@ namespace Osadnici
     
     public class Game
     {
-        public int SellConstant = 10;
+        public int SellConstant = 4;
         public int PirateNumber = 7;
         public List<Player> Players;
         public Dice Dice;
@@ -125,6 +125,33 @@ namespace Osadnici
 
         }
 
+
+        // exchanges cards betwen players, one if player sell constant if it is bank
+        public void ExchangeCards(SameCardsSet offeredCardSet, int pickedBtnIndex, Player pickedPlayer)
+        {
+            var gainedCardSet = pickedPlayer.GetOfferedCards().ToList()[pickedBtnIndex];
+            if (pickedPlayer.Color == Color.None) // bot
+            {
+                offeredCardSet.CardsCount -= this.SellConstant;
+                pickedPlayer.CardSetByMaterial(offeredCardSet.Material).CardsCount += this.SellConstant;
+            }
+            else
+            {
+                offeredCardSet.CardsCount -= 1;
+                pickedPlayer.CardSetByMaterial(offeredCardSet.Material).CardsCount += 1;
+            }
+
+            gainedCardSet.CardsCount -= 1;
+            GetCurrentPlayer().CardSetByMaterial(gainedCardSet.Material).CardsCount += 1;
+
+            
+            
+        }
+        // returns a player  Bank with cards that can be offered by bank during an exchange
+        public Player SetBankCards()
+        {
+            return new Player(Color.None);
+        }
         public void SetPlayers(int numberOfPlayers)
         {
             Players = new List<Player>();

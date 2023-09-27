@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET7_0;NETCOREAPP
 C:\Files\Studium\C#\Zápočťák\Osadnici\Osadnici\Osadnici\App.xaml
-4-760261604
+5-369541287
 
-221231136651
+23-1873519345
 198-759771931
-MainWindow.xaml;WindowHexagon.xaml;WindowPickPlayers.xaml;WinnerWindow.xaml;
+MainWindow.xaml;SellWindow.xaml;WindowHexagon.xaml;WindowPickPlayers.xaml;WinnerWindow.xaml;
 
-False
+True
 

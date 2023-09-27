@@ -668,12 +668,12 @@ namespace Osadnici
             if (activity == Activity.StartFirstVillage || activity == Activity.StartSecondVillage || activity == Activity.BuildingVillage
                 || activity == Activity.BuildingTown || activity == Activity.BuildingRoad || activity == Activity.StartFirstRoad || activity == Activity.StartSecondRoad
                 || activity == Activity.MovingPirate)
-            {
-                var hexagonWindow = new WindowHexagon(game: this.gameLogic, clickedHexagon: clickedHexagon,
+
+            { var hexagonWindow = new WindowHexagon(game: this.gameLogic, clickedHexagon: clickedHexagon,
                                                 clickedButton: clickedButton, clickedIndex: clickedIndex);
                 hexagonWindow.Show();
                 this.Close();
-            }
+                }
         }
         void DiceButton_Click(object sender, RoutedEventArgs e)
         {
@@ -774,30 +774,11 @@ namespace Osadnici
             {
                 if (clickedButton.Name.EndsWith(material.ToString()))
                 {
-                    Trace.WriteLine(material);
-                    bool succesfulSell = gameLogic.GetCurrentPlayer().Sell(material, gameLogic);
-                    if (succesfulSell)
-                    {
-                        var winner = gameLogic.CheckWinner();
-                        if (winner != null)
-                        {
-                            var winnerWindow = new WinnerWindow(winner);
-                            winnerWindow.Show();
-                            this.Close();
-                        }
-                        else
-                        {
-                            var mainWindow = new MainWindow(game: this.gameLogic, "Succesful sell");
-                            mainWindow.Show(); // TODO stejne se smaze
-                            this.Close();
-                        }
-                       
-                    }
-                    else
-                    {
-                        annoucmentLabel.Content = "You cannot sell this";
-                    }
-                    break;
+                    SameCardsSet pickedCardsSet = gameLogic.GetCurrentPlayer().CardSetByMaterial(material);
+                    var sellWinddow = new SellWindow(game: gameLogic, pickedCardsSet);
+                    sellWinddow.Show();
+                    this.Close();
+                    
                 }
 
                
