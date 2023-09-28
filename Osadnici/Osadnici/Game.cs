@@ -181,7 +181,10 @@ namespace Osadnici
             {
                 if (clickedName.EndsWith(material.ToString()))
                 {
-                    return ("Successful sell", GetCurrentPlayer().CardSetByMaterial(material));
+                    var cardSet = GetCurrentPlayer().CardSetByMaterial(material);
+                    if (cardSet == null || cardSet.CardsCount == 0)
+                        return ("Cannot sell", null);
+                    return ("Successful sell", cardSet);
                     
                 }
             }
